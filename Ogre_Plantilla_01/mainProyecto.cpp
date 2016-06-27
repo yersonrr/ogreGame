@@ -8,7 +8,7 @@ public:
 	void createCamera() {
 
 		mCamera = mSceneMgr->createCamera("MyCamera1");
-		mCamera->setPosition(0,100,6000);
+		mCamera->setPosition(0,100,6500);
 		mCamera->lookAt(0,0,100);
 		mCamera->setNearClipDistance(1);
 
@@ -557,6 +557,163 @@ public:
 		_nodeObstaculo48->translate(160,5,6400);
 		_nodeObstaculo48->setScale(0.3,0.3,0.3);
 
+		// Asteroides
+		Ogre::SceneNode* _nodeAsteroid01 = mSceneMgr->createSceneNode("Asteroid01");
+		mSceneMgr->getRootSceneNode()->addChild(_nodeAsteroid01);
+		Ogre::Entity* _entAsteroid01 = mSceneMgr->createEntity("entAsteroid01", "roca01.mesh");
+		_nodeAsteroid01->attachObject(_entAsteroid01);
+		_nodeAsteroid01->translate(-160,10,6800);
+		_nodeAsteroid01->setScale(5,5,5);
+
+		Ogre::SceneNode* _nodeAsteroid02 = mSceneMgr->createSceneNode("Asteroid02");
+		mSceneMgr->getRootSceneNode()->addChild(_nodeAsteroid02);
+		Ogre::Entity* _entAsteroid02 = mSceneMgr->createEntity("entAsteroid02", "roca02.mesh");
+		_nodeAsteroid02->attachObject(_entAsteroid02);
+		_nodeAsteroid02->translate(150,10,6650);
+		_nodeAsteroid02->setScale(5,5,5);
+
+		Ogre::SceneNode* _nodeAsteroid03 = mSceneMgr->createSceneNode("Asteroid03");
+		mSceneMgr->getRootSceneNode()->addChild(_nodeAsteroid03);
+		Ogre::Entity* _entAsteroid03 = mSceneMgr->createEntity("entAsteroid03", "roca03.mesh");
+		_nodeAsteroid03->attachObject(_entAsteroid03);
+		_nodeAsteroid03->translate(-150,10,6650);
+		_nodeAsteroid03->setScale(5,5,5);
+
+		Ogre::SceneNode* _nodeAsteroid04 = mSceneMgr->createSceneNode("Asteroid04");
+		mSceneMgr->getRootSceneNode()->addChild(_nodeAsteroid04);
+		Ogre::Entity* _entAsteroid04 = mSceneMgr->createEntity("entAsteroid04", "roca04.mesh");
+		_nodeAsteroid04->attachObject(_entAsteroid04);
+		_nodeAsteroid04->translate(160,10,6900);
+		_nodeAsteroid04->setScale(5,5,5);
+
+		Ogre::SceneNode* _nodeAsteroid05 = mSceneMgr->createSceneNode("Asteroid05");
+		mSceneMgr->getRootSceneNode()->addChild(_nodeAsteroid05);
+		Ogre::Entity* _entAsteroid05 = mSceneMgr->createEntity("entAsteroid05", "roca03.mesh");
+		_nodeAsteroid05->attachObject(_entAsteroid05);
+		_nodeAsteroid05->translate(160,5,7100);
+		_nodeAsteroid05->setScale(2,2,2);
+
+		Ogre::SceneNode* _nodeAsteroid06 = mSceneMgr->createSceneNode("Asteroid06");
+		mSceneMgr->getRootSceneNode()->addChild(_nodeAsteroid06);
+		Ogre::Entity* _entAsteroid06 = mSceneMgr->createEntity("entAsteroid06", "roca01.mesh");
+		_nodeAsteroid06->attachObject(_entAsteroid06);
+		_nodeAsteroid06->translate(-160,5,7200);
+		_nodeAsteroid06->setScale(2,2,2);
+
+		Ogre::SceneNode* _nodeAsteroid07 = mSceneMgr->createSceneNode("Asteroid07");
+		mSceneMgr->getRootSceneNode()->addChild(_nodeAsteroid07);
+		Ogre::Entity* _entAsteroid07 = mSceneMgr->createEntity("entAsteroid07", "roca03.mesh");
+		_nodeAsteroid07->attachObject(_entAsteroid07);
+		_nodeAsteroid07->translate(160,5,7300);
+		_nodeAsteroid07->setScale(2,2,2);
+
+		Ogre::SceneNode* _nodeAsteroid08 = mSceneMgr->createSceneNode("Asteroid08");
+		mSceneMgr->getRootSceneNode()->addChild(_nodeAsteroid08);
+		Ogre::Entity* _entAsteroid08 = mSceneMgr->createEntity("entAsteroid08", "roca02.mesh");
+		_nodeAsteroid08->attachObject(_entAsteroid08);
+		_nodeAsteroid08->translate(-160,5,7400);
+		_nodeAsteroid08->setScale(1.5,1.5,1.5);
+
+		Ogre::SceneNode* _nodeAsteroid09 = mSceneMgr->createSceneNode("Asteroid09");
+		mSceneMgr->getRootSceneNode()->addChild(_nodeAsteroid09);
+		Ogre::Entity* _entAsteroid09 = mSceneMgr->createEntity("entAsteroid09", "roca03.mesh");
+		_nodeAsteroid09->attachObject(_entAsteroid09);
+		_nodeAsteroid09->translate(-180,5,7700);
+		_nodeAsteroid09->setScale(1,1,1);
+
+		Ogre::SceneNode* _nodeAsteroid10 = mSceneMgr->createSceneNode("Asteroid10");
+		mSceneMgr->getRootSceneNode()->addChild(_nodeAsteroid10);
+		Ogre::Entity* _entAsteroid10 = mSceneMgr->createEntity("entAsteroid10", "roca03.mesh");
+		_nodeAsteroid10->attachObject(_entAsteroid10);
+		_nodeAsteroid10->translate(180,5,7700);
+		_nodeAsteroid10->setScale(1,1,1);
+
+		Ogre::SceneNode* _nodeAsteroid11 = mSceneMgr->createSceneNode("Asteroid11");
+		mSceneMgr->getRootSceneNode()->addChild(_nodeAsteroid11);
+		Ogre::Entity* _entAsteroid11 = mSceneMgr->createEntity("entAsteroid11", "roca03.mesh");
+		_nodeAsteroid11->attachObject(_entAsteroid11);
+		_nodeAsteroid11->translate(90,300,8000);
+		_nodeAsteroid11->setScale(7,4,4);
+
+		Ogre::SceneNode* _nodeAsteroid12 = mSceneMgr->createSceneNode("Asteroid12");
+		mSceneMgr->getRootSceneNode()->addChild(_nodeAsteroid12);
+		Ogre::Entity* _entAsteroid12 = mSceneMgr->createEntity("entAsteroid12", "roca01.mesh");
+		_nodeAsteroid12->attachObject(_entAsteroid12);
+		_nodeAsteroid12->translate(-90,300,8000);
+		_nodeAsteroid12->setScale(6,4,4);
+		_nodeAsteroid12->yaw(Degree(90));
+
+		// Asteroids Final
+
+		Ogre::SceneNode* _nodeAsteroid13 = mSceneMgr->createSceneNode("Asteroid13");
+		mSceneMgr->getRootSceneNode()->addChild(_nodeAsteroid13);
+		Ogre::Entity* _entAsteroid13 = mSceneMgr->createEntity("entAsteroid13", "roca01.mesh");
+		_nodeAsteroid13->attachObject(_entAsteroid13);
+		_nodeAsteroid13->translate(0,8,10000);
+		_nodeAsteroid13->setScale(0.5,1,1);
+		_nodeAsteroid13->yaw(Degree(90));
+
+		Ogre::SceneNode* _nodeAsteroid14 = mSceneMgr->createSceneNode("Asteroid14");
+		mSceneMgr->getRootSceneNode()->addChild(_nodeAsteroid14);
+		Ogre::Entity* _entAsteroid14 = mSceneMgr->createEntity("entAsteroid14", "roca02.mesh");
+		_nodeAsteroid14->attachObject(_entAsteroid14);
+		_nodeAsteroid14->translate(40,8,10000);
+		_nodeAsteroid14->setScale(0.5,1,1);
+		_nodeAsteroid14->yaw(Degree(90));
+
+		Ogre::SceneNode* _nodeAsteroid15 = mSceneMgr->createSceneNode("Asteroid15");
+		mSceneMgr->getRootSceneNode()->addChild(_nodeAsteroid15);
+		Ogre::Entity* _entAsteroid15 = mSceneMgr->createEntity("entAsteroid15", "roca02.mesh");
+		_nodeAsteroid15->attachObject(_entAsteroid15);
+		_nodeAsteroid15->translate(80,8,10000);
+		_nodeAsteroid15->setScale(0.5,1,1);
+
+		Ogre::SceneNode* _nodeAsteroid16 = mSceneMgr->createSceneNode("Asteroid16");
+		mSceneMgr->getRootSceneNode()->addChild(_nodeAsteroid16);
+		Ogre::Entity* _entAsteroid16 = mSceneMgr->createEntity("entAsteroid16", "roca03.mesh");
+		_nodeAsteroid16->attachObject(_entAsteroid16);
+		_nodeAsteroid16->translate(120,8,10000);
+		_nodeAsteroid16->setScale(0.5,1,1);
+
+		Ogre::SceneNode* _nodeAsteroid17 = mSceneMgr->createSceneNode("Asteroid17");
+		mSceneMgr->getRootSceneNode()->addChild(_nodeAsteroid17);
+		Ogre::Entity* _entAsteroid17 = mSceneMgr->createEntity("entAsteroid17", "roca04.mesh");
+		_nodeAsteroid17->attachObject(_entAsteroid17);
+		_nodeAsteroid17->translate(160,8,10000);
+		_nodeAsteroid17->setScale(0.5,1,1);
+
+		Ogre::SceneNode* _nodeAsteroid18 = mSceneMgr->createSceneNode("Asteroid18");
+		mSceneMgr->getRootSceneNode()->addChild(_nodeAsteroid18);
+		Ogre::Entity* _entAsteroid18 = mSceneMgr->createEntity("entAsteroid18", "roca02.mesh");
+		_nodeAsteroid18->attachObject(_entAsteroid18);
+		_nodeAsteroid18->translate(-40,8,10000);
+		_nodeAsteroid18->setScale(0.5,1,1);
+		_nodeAsteroid18->yaw(Degree(70));
+
+		Ogre::SceneNode* _nodeAsteroid19 = mSceneMgr->createSceneNode("Asteroid19");
+		mSceneMgr->getRootSceneNode()->addChild(_nodeAsteroid19);
+		Ogre::Entity* _entAsteroid19 = mSceneMgr->createEntity("entAsteroid19", "roca01.mesh");
+		_nodeAsteroid19->attachObject(_entAsteroid19);
+		_nodeAsteroid19->translate(-80,8,10000);
+		_nodeAsteroid19->setScale(0.5,1,1);
+
+		Ogre::SceneNode* _nodeAsteroid20 = mSceneMgr->createSceneNode("Asteroid20");
+		mSceneMgr->getRootSceneNode()->addChild(_nodeAsteroid20);
+		Ogre::Entity* _entAsteroid20 = mSceneMgr->createEntity("entAsteroid20", "roca03.mesh");
+		_nodeAsteroid20->attachObject(_entAsteroid20);
+		_nodeAsteroid20->translate(-120,8,10000);
+		_nodeAsteroid20->setScale(0.5,1,1);
+
+		Ogre::SceneNode* _nodeAsteroid21 = mSceneMgr->createSceneNode("Asteroid21");
+		mSceneMgr->getRootSceneNode()->addChild(_nodeAsteroid21);
+		Ogre::Entity* _entAsteroid21 = mSceneMgr->createEntity("entAsteroid21", "roca04.mesh");
+		_nodeAsteroid21->attachObject(_entAsteroid21);
+		_nodeAsteroid21->translate(-160,8,10000);
+		_nodeAsteroid21->setScale(0.5,1,1);
+
+
+		//TODO 5, 6, 7, 8 Lineal Animated
+		//TODO 9, 10 Diagonal Animated
 		//SPACE
 		mSceneMgr->setSkyDome(true, "matPropio05", 5, 8);
 		
