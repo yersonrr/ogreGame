@@ -500,6 +500,65 @@ public:
 		_nodeObstaculo40->attachObject(_entObstaculo40);
 		_nodeObstaculo40->translate(0,5,6000);
 		_nodeObstaculo40->setScale(4,8,4);
+
+		Ogre::SceneNode* _nodeObstaculo45 = mSceneMgr->createSceneNode("Obstaculo45");
+		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo45);
+		Ogre::Entity* _entObstaculo45 = mSceneMgr->createEntity("entObstaculo45", "cubo01.mesh");
+		_nodeObstaculo45->attachObject(_entObstaculo45);
+		_nodeObstaculo45->translate(160,5,6000);
+		_nodeObstaculo45->setScale(4,8,4);
+
+		Ogre::SceneNode* _nodeObstaculo46 = mSceneMgr->createSceneNode("Obstaculo46");
+		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo46);
+		Ogre::Entity* _entObstaculo46 = mSceneMgr->createEntity("entObstaculo46", "cubo01.mesh");
+		_nodeObstaculo46->attachObject(_entObstaculo46);
+		_nodeObstaculo46->translate(-160,5,6000);
+		_nodeObstaculo46->setScale(4,8,4);
+
+		Ogre::SceneNode* _nodeObstaculo41 = mSceneMgr->createSceneNode("Obstaculo41");
+		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo41);
+		Ogre::Entity* _entObstaculo41 = mSceneMgr->createEntity("entObstaculo41", "cubo02.mesh");
+		_nodeObstaculo41->attachObject(_entObstaculo41);
+		_nodeObstaculo41->translate(70,5,6200);
+		_nodeObstaculo41->setScale(4,8,4);
+
+		Ogre::SceneNode* _nodeObstaculo43 = mSceneMgr->createSceneNode("Obstaculo43");
+		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo43);
+		Ogre::Entity* _entObstaculo43 = mSceneMgr->createEntity("entObstaculo43", "cubo02.mesh");
+		_nodeObstaculo43->attachObject(_entObstaculo43);
+		_nodeObstaculo43->translate(-70,5,6200);
+		_nodeObstaculo43->setScale(4,8,4);
+
+		Ogre::SceneNode* _nodeObstaculo42 = mSceneMgr->createSceneNode("Obstaculo42");
+		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo42);
+		Ogre::Entity* _entObstaculo42 = mSceneMgr->createEntity("entObstaculo42", "cubo02.mesh");
+		_nodeObstaculo42->attachObject(_entObstaculo42);
+		_nodeObstaculo42->translate(100,5,6200);
+		_nodeObstaculo42->setScale(4,8,4);
+
+		Ogre::SceneNode* _nodeObstaculo44 = mSceneMgr->createSceneNode("Obstaculo44");
+		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo44);
+		Ogre::Entity* _entObstaculo44 = mSceneMgr->createEntity("entObstaculo44", "cubo02.mesh");
+		_nodeObstaculo44->attachObject(_entObstaculo44);
+		_nodeObstaculo44->translate(-100,5,6200);
+		_nodeObstaculo44->setScale(4,8,4);
+
+		Ogre::SceneNode* _nodeObstaculo47 = mSceneMgr->createSceneNode("Obstaculo47");
+		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo47);
+		Ogre::Entity* _entObstaculo47 = mSceneMgr->createEntity("entObstaculo47", "sphere.mesh");
+		_nodeObstaculo47->attachObject(_entObstaculo47);
+		_nodeObstaculo47->translate(-160,5,6300);
+		_nodeObstaculo47->setScale(0.3,0.3,0.3);
+
+		Ogre::SceneNode* _nodeObstaculo48 = mSceneMgr->createSceneNode("Obstaculo48");
+		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo48);
+		Ogre::Entity* _entObstaculo48 = mSceneMgr->createEntity("entObstaculo48", "sphere.mesh");
+		_nodeObstaculo48->attachObject(_entObstaculo48);
+		_nodeObstaculo48->translate(160,5,6400);
+		_nodeObstaculo48->setScale(0.3,0.3,0.3);
+
+		//SPACE
+		mSceneMgr->setSkyDome(true, "matPropio05", 5, 8);
 		
 	}
 
