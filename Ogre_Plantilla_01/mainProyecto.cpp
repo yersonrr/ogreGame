@@ -189,6 +189,16 @@ public:
 		//Chasis
 		_nodeChasis01 = mSceneMgr->createSceneNode("Chasis01");
 		_nodeChasis01->attachObject(mCamera);
+
+		// chasis light
+		Ogre::Light* spotLight = mSceneMgr->createLight("spotLight");
+		spotLight->setType(Ogre::Light::LT_SPOTLIGHT);
+		spotLight->setDiffuseColour(1.0, 1.0, 1.0);
+		spotLight->setPosition(Ogre::Vector3(0, 20, 0));
+		spotLight->setDirection(Ogre::Vector3(0, 20, 1000));
+		spotLight->setSpotlightRange(Ogre::Degree(10), Ogre::Degree(35));
+		_nodeChasis01->attachObject(spotLight);
+
 		mSceneMgr->getRootSceneNode()->addChild(_nodeChasis01);
 			
 		_entChasis01 = mSceneMgr->createEntity("entChasis01", "chasisCarro.mesh");
