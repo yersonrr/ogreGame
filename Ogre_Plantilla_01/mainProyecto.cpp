@@ -1,22 +1,107 @@
 #include "Ogre\ExampleApplication.h"
 
+
+class FrameListenerClase : public Ogre::FrameListener{
+
+private:
+	Ogre::SceneNode* _node;
+	Ogre::AnimationState* _anim;
+	OIS::InputManager* _man;
+	OIS::Keyboard* _key;
+	Ogre::Camera* _cam;
+
+public:
+	FrameListenerClase(Ogre::SceneNode* node, Ogre::Entity* entOgre01, Ogre::Camera* cam, RenderWindow* win){
+		//Configuracion para captura de teclado y mouse 
+		size_t windowHnd = 0;
+		std::stringstream windowHndStr;
+		win->getCustomAttribute("WINDOW",&windowHnd);
+		windowHndStr << windowHnd;
+
+		OIS::ParamList pl;
+		pl.insert(std::make_pair(std::string("WINDOW"),windowHndStr.str()));
+
+		//eventos
+		_man = OIS::InputManager::createInputSystem(pl);
+		_key = static_cast<OIS::Keyboard*>(_man->createInputObject(OIS::OISKeyboard,false));
+		_cam = cam;
+		_node = node;
+	}
+
+
+	~FrameListenerClase(){
+		_man->destroyInputObject(_key);
+		OIS::InputManager::destroyInputSystem(_man);
+	}
+
+	bool frameStarted(const Ogre::FrameEvent &evt){
+		_key->capture();
+
+		float movSpeed=3.0;
+		Ogre::Vector3 tmov(0,0,0);
+		float trot = 0.0;
+
+		if (_key->isKeyDown(OIS::KC_ESCAPE))
+			return false;
+
+		if(_key->isKeyDown(OIS::KC_W)) {
+			tmov += Ogre::Vector3(0,0,100);
+		}
+
+		if(_key->isKeyDown(OIS::KC_S)) {
+			tmov += Ogre::Vector3(0,0,-100);
+		}
+
+		if(_key->isKeyDown(OIS::KC_A)) {
+			trot += 10.0;
+		}
+
+		if(_key->isKeyDown(OIS::KC_D)) {
+			trot -= 10.0;
+		}
+		
+		// car control
+		_node->yaw(Ogre::Degree(trot));
+		_node->translate(_node->getOrientation() * tmov * evt.timeSinceLastFrame * movSpeed);
+
+		return true;
+	}
+};
+
+
 class Example1 : public ExampleApplication
 {
 
 public:
 
+	Ogre::FrameListener* FrameListener01;
+	Ogre::SceneNode* _nodeChasis01;
+	Ogre::Entity* _entChasis01;
+
+	Example1(){
+		FrameListener01 = NULL;
+	}
+
+	~Example1(){
+		if(FrameListener01){
+			delete FrameListener01;
+		}
+	}
+
+	void createFrameListener(){
+		FrameListener01 = new FrameListenerClase(_nodeChasis01,_entChasis01,mCamera,mWindow);
+		mRoot->addFrameListener(FrameListener01);
+	}
+
 	void createCamera() {
-
 		mCamera = mSceneMgr->createCamera("MyCamera1");
-		mCamera->setPosition(0,100,6000);
-		mCamera->lookAt(0,0,100);
+		mCamera->setPosition(0,20,-50);
+		mCamera->lookAt(0,20,1000);
 		mCamera->setNearClipDistance(1);
-
 	}
 
 	void createScene()
 	{
-
 		mSceneMgr->setAmbientLight(Ogre::ColourValue(1.0, 1.0, 1.0));
 		mSceneMgr->setShadowTechnique(Ogre::SHADOWTYPE_STENCIL_ADDITIVE);
 		
@@ -31,10 +116,11 @@ public:
 		LuzPuntual02->setDirection(Ogre::Vector3( -1, -1, -1 ));
 
 		//Chasis
-		Ogre::SceneNode* _nodeChasis01 = mSceneMgr->createSceneNode("Chasis01");
+		_nodeChasis01 = mSceneMgr->createSceneNode("Chasis01");
+		_nodeChasis01->attachObject(mCamera);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeChasis01);
 			
-		Ogre::Entity* _entChasis01 = mSceneMgr->createEntity("entChasis01", "chasisCarro.mesh");
+		_entChasis01 = mSceneMgr->createEntity("entChasis01", "chasisCarro.mesh");
 		_entChasis01->setMaterialName("shCarro01");
 		_nodeChasis01->attachObject(_entChasis01);
 
@@ -559,7 +645,6 @@ public:
 
 		//SPACE
 		mSceneMgr->setSkyDome(true, "matPropio05", 5, 8);
-		
 	}
 
 };
@@ -567,7 +652,6 @@ public:
 
 int main (void)
 {
-
 	Example1 app;
 	app.go();
 	return 0;
