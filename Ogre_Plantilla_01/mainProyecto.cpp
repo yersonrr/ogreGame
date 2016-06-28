@@ -81,14 +81,14 @@ public:
 				
 		Ogre::Entity* _entBPista = mSceneMgr->createEntity("BordePista01", "bordePista.mesh");
 		_nodeBPista->attachObject(_entBPista);
-
-
+		
 		//PisoObstaculo
 		Ogre::SceneNode* _nodePObstaculo = mSceneMgr->createSceneNode("PistaObstaculo");
 		mSceneMgr->getRootSceneNode()->addChild(_nodePObstaculo);
 				
 		Ogre::Entity* _entPObstaculo = mSceneMgr->createEntity("PistaObstaculo", "pisoObstaculo01.mesh");
 		_nodePObstaculo->attachObject(_entPObstaculo);
+		_entPObstaculo->setMaterialName("matPiso01");
 
 		//PisoNOObstaculo
 		Ogre::SceneNode* _nodePNObstaculo = mSceneMgr->createSceneNode("PistaNoObstaculo");
@@ -96,7 +96,7 @@ public:
 				
 		Ogre::Entity* _entPNOObstaculo = mSceneMgr->createEntity("PistaNoObstaculo", "pisoNoObstaculo01.mesh");
 		_nodePNObstaculo->attachObject(_entPNOObstaculo);
-
+		_entPNOObstaculo->setMaterialName("matPiso03");
 
 		//PosterInicioFinal
 		Ogre::SceneNode* _nodePoster = mSceneMgr->createSceneNode("PosterInicioFinal");

@@ -1,0 +1,61 @@
+material matPiso01
+{
+	technique
+	{
+		pass
+		{
+			lighting off
+
+			ambient 1.0 1.0 1.0 1
+			diffuse 1.0 1.0 1.0 1
+			emissive 0 0 0 1
+
+			texture_unit{
+				texture floorMetal.jpg
+				rotate_anim 0.1
+				scale 0.2 0.2
+			}
+		}
+	}
+}
+
+material matPiso02
+{
+	technique
+	{
+		pass
+		{
+			lighting off
+
+			ambient 1.0 1.0 1.0 1
+			diffuse 1.0 1.0 1.0 1
+			emissive 0 0 0 1
+
+			texture_unit{
+				texture techno.jpg
+				rotate_anim 0.1
+				scale 0.2 0.2
+			}
+		}
+	}
+}
+
+material matPiso03
+{
+	technique
+	{
+		pass
+		{
+			lighting off
+
+			ambient 1.0 1.0 1.0 1
+			diffuse 1.0 1.0 1.0 1
+			emissive 0 0 0 1
+
+			texture_unit{
+				texture floor1.jpg
+				scale 0.2 0.2
+			}
+		}
+	}
+}
