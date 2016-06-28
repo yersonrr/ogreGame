@@ -37,7 +37,6 @@ public:
 		_node = node;
 	}
 
-
 	~FrameListenerClase(){
 		_man->destroyInputObject(_key);
 		OIS::InputManager::destroyInputSystem(_man);
@@ -52,7 +51,32 @@ public:
 		Ogre::Vector3 diff = node1->_getDerivedPosition() - node2->_getDerivedPosition();
 		float distance = sqrt(diff.x*diff.x + diff.y*diff.y + diff.z*diff.z),
 		      radius1 = 20.0,
-			  radius2 = 10.0;
+			  radius2;
+		
+		Ogre::Vector3 scale = node2->getScale();
+		if (scale.x == 4.0 && scale.z == 4.0)
+			radius2 = 10.0;
+		else if (scale.x == 8.0 && scale.z == 2.0)
+			radius2 = 5.0;
+		else if (scale.x == 3.0 && scale.z == 3.0)
+			radius2 = 8.0;
+		else if (scale.x == 10.0 && scale.z == 1.0)
+			radius2 = 2.0;
+		else if (scale.x == 10.0 && scale.z == 10.0)
+			radius2 = 20.0;
+		else if (scale.x > 0.29 && scale.x < 0.31 && scale.z > 0.29 && scale.z < 0.31)
+			radius2 = 20.0;
+		else if (scale.x == 5.0 && scale.z == 5.0)
+			radius2 = 65.0;
+		else if (scale.x == 2.0 && scale.z == 2.0)
+			radius2 = 5.0;
+		else if (scale.x < 1.9 && scale.z < 1.9)
+			radius2 = 3.0;
+		else if (scale.x == 7.0 && scale.z == 4.0)
+			radius2 = 15.0;
+		else if (scale.x == 6.0 && scale.z == 4.0)
+			radius2 = 14.0;
+		else radius2 = 10.0;
 		return distance < radius1 + radius2;
 	}
 
@@ -131,14 +155,12 @@ public:
 
 		// car control
 		Ogre::Vector3 initial_position = _node->_getDerivedPosition();
-		//Ogre::Quaternion initial_orientation = _node->_getDerivedOrientation();
 		_node->yaw(Ogre::Degree(trot));
 		_node->translate(_node->getOrientation() * tmov * evt.timeSinceLastFrame * movSpeed);
 
 		if (collides_any_obstacle(_node, obstacles) || collides_any_wall(_node)) {
 			_node->_setDerivedPosition(initial_position);
 			_node->yaw(Ogre::Degree(-trot));
-			//_node->_setDerivedPosition(initial_orientation);
 		}
 
 		return true;
@@ -203,29 +225,37 @@ public:
 
 	void createScene()
 	{
-		mSceneMgr->setAmbientLight(Ogre::ColourValue(1.0, 1.0, 1.0));
-		mSceneMgr->setShadowTechnique(Ogre::SHADOWTYPE_STENCIL_ADDITIVE);
+		mSceneMgr->setAmbientLight(Ogre::ColourValue(0.0, 0.0, 0.0));
+		mSceneMgr->setShadowTechnique(Ogre::SHADOWTYPE_STENCIL_MODULATIVE);
 		
 		Ogre::Light* LuzPuntual01 = mSceneMgr->createLight("Luz01");
 		LuzPuntual01->setType(Ogre::Light::LT_DIRECTIONAL);
 		LuzPuntual01->setDiffuseColour(1.0,1.0,1.0);
+		//LuzPuntual01->setDirection(Ogre::Vector3( 0, -1, -1 ));
 		LuzPuntual01->setDirection(Ogre::Vector3( 1, -1, -1 ));
 		
-		Ogre::Light* LuzPuntual02 = mSceneMgr->createLight("Luz02");
-		LuzPuntual02->setType(Ogre::Light::LT_DIRECTIONAL);
-		LuzPuntual02->setDiffuseColour(1.0,1.0,1.0);
-		LuzPuntual02->setDirection(Ogre::Vector3( -1, -1, -1 ));
+		Ogre::Light* LuzPuntual03 = mSceneMgr->createLight("Luz03");
+		LuzPuntual03->setType(Ogre::Light::LT_DIRECTIONAL);
+		LuzPuntual03->setDiffuseColour(1.0,1.0,1.0);
+		//LuzPuntual03->setDirection(Ogre::Vector3( 0, -1, 1 ));
+		LuzPuntual03->setDirection(Ogre::Vector3( -1, -1, -1 ));
 
 		//Chasis
 		_nodeChasis01 = mSceneMgr->createSceneNode("Chasis01");
 		_nodeChasis01->attachObject(mCamera);
 
 		// chasis light
+		/*Ogre::Light* pointLight = mSceneMgr->createLight("pointLight");
+		pointLight->setType(Ogre::Light::LT_POINT);
+		pointLight->setDiffuseColour(1.0, 1.0, 1.0);
+		pointLight->setSpecularColour(1.0, 1.0, 1.0);
+		pointLight->setPosition(Ogre::Vector3(0, 30, -10));
+		_nodeChasis01->attachObject(pointLight);*/
 		Ogre::Light* spotLight = mSceneMgr->createLight("spotLight");
 		spotLight->setType(Ogre::Light::LT_SPOTLIGHT);
 		spotLight->setDiffuseColour(1.0, 1.0, 1.0);
 		spotLight->setPosition(Ogre::Vector3(0, 20, 0));
-		spotLight->setDirection(Ogre::Vector3(0, 20, 1000));
+		spotLight->setDirection(Ogre::Vector3(0, 50, 1));
 		spotLight->setSpotlightRange(Ogre::Degree(10), Ogre::Degree(35));
 		_nodeChasis01->attachObject(spotLight);
 
