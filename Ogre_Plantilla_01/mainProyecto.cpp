@@ -255,6 +255,7 @@ public:
 				
 		Ogre::Entity* _entPObstaculo = mSceneMgr->createEntity("PistaObstaculo", "pisoObstaculo01.mesh");
 		_nodePObstaculo->attachObject(_entPObstaculo);
+
 		_entPObstaculo->setMaterialName("matPiso02");
 		_entPObstaculo->setCastShadows(true);
 
@@ -266,6 +267,7 @@ public:
 		_nodePNObstaculo->attachObject(_entPNOObstaculo);
 		_entPNOObstaculo->setMaterialName("matPiso03");
 		_entPNOObstaculo->setCastShadows(true);
+
 
 		//PosterInicioFinal
 		Ogre::SceneNode* _nodePoster = mSceneMgr->createSceneNode("PosterInicioFinal");
@@ -946,7 +948,7 @@ public:
 		//SPACE
 		mSceneMgr->setSkyDome(true, "matSky", 5, 8);
 
-		// create wheels animationsa
+		// create wheels animations
 		for (int i=0; i<4; i++)
 			createWheelAnimation(i);
 	}
