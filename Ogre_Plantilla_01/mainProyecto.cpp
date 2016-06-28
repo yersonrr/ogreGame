@@ -41,6 +41,12 @@ public:
 		OIS::InputManager::destroyInputSystem(_man);
 	}
 
+	/*bool collides(Ogre::SceneNode* car, Ogre::SceneNode other) {
+		for (int i=0; i<num_obstacles; i++) {
+			
+		}
+	}*/
+
 	bool frameStarted(const Ogre::FrameEvent &evt){
 		_key->capture();
 
@@ -200,7 +206,7 @@ public:
 		_nodeChasis01->attachObject(spotLight);
 
 		mSceneMgr->getRootSceneNode()->addChild(_nodeChasis01);
-			
+		
 		_entChasis01 = mSceneMgr->createEntity("entChasis01", "chasisCarro.mesh");
 		_entChasis01->setMaterialName("shCarro01");
 		_nodeChasis01->attachObject(_entChasis01);
