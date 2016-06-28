@@ -1,0 +1,211 @@
+material matPiso01
+{
+	receive_shadows on
+
+	technique
+	{
+		pass
+		{
+			lighting off
+
+			ambient 1.0 1.0 1.0 1
+			diffuse 1.0 1.0 1.0 1
+			emissive 0 0 0 1
+
+			texture_unit{
+				texture techno.jpg
+				scale 0.2 0.2
+			}
+		}
+	}
+}
+
+material matPiso02
+{
+	receive_shadows on
+	technique
+	{
+		pass
+		{
+			texture_unit
+			{
+				texture techno2.jpg
+				scale 0.5 0.5
+			}
+		}
+	}
+}
+
+material matPiso03
+{
+	receive_shadows on
+	technique
+	{
+		pass
+		{
+			texture_unit
+			{
+				texture floor1.jpg
+				scale 0.2 0.2
+			}
+		}
+	}
+}
+
+material matWall
+{
+	receive_shadows on
+
+	technique
+	{
+		pass
+		{
+			lighting off
+
+			ambient 1.0 1.0 1.0 1
+			diffuse 1.0 1.0 1.0 1
+			emissive 0 0 0 1
+
+			texture_unit{
+				texture wall.jpg
+				scale 0.2 0.2
+			}
+		}
+	}
+}
+
+material matSky
+{
+	technique
+	{
+		pass
+		{
+			lighting off
+
+			ambient 1.0 1.0 1.0 1
+			diffuse 1.0 1.0 1.0 1
+			emissive 0 0 0 1
+
+			texture_unit{
+				texture space2.png
+				rotate_anim 0.001
+				scale 5 5
+			}
+		}
+	}
+}
+
+material matSphere
+{
+	receive_shadows on
+
+	technique
+	{
+		pass
+		{
+			lighting on
+
+			ambient 1.0 1.0 1.0 1
+			diffuse 1.0 1.0 1.0 1
+			emissive 0 0 0 1
+
+			texture_unit{
+				texture lava2.jpg
+				env_map spherical
+				rotate_anim 0.01
+				scale 2 2
+			}
+		}
+	}
+}
+
+material matSphere2
+{
+	technique
+	{
+		pass
+		{
+			lighting on
+
+			ambient 1.0 1.0 1.0 1
+			diffuse 1.0 1.0 1.0 1
+			emissive 0 0 0 1
+
+			texture_unit{
+				texture thunder.jpg
+				env_map spherical
+				rotate_anim 0.01
+				scale 2 2
+			}
+		}
+	}
+}
+
+material matArc1
+{
+	receive_shadows on 
+
+	technique
+	{
+		pass
+		{
+			lighting on
+
+			ambient 1.0 1.0 1.0 1
+			diffuse 1.0 1.0 1.0 1
+			emissive 0 0 0 1
+
+			texture_unit{
+				texture black.jpg
+				rotate_anim 0.01
+				scale 2 2
+			}
+		}
+	}
+}
+
+material matArc2
+{
+	receive_shadows on
+
+	technique
+	{
+		pass
+		{
+			lighting on
+
+			ambient 1.0 1.0 1.0 1
+			diffuse 1.0 1.0 1.0 1
+			emissive 0 0 0 1
+
+			texture_unit{
+				texture silver.jpg
+				rotate_anim 0.01
+				scale 2 2
+			}
+		}
+	}
+}
+
+material matArc3
+{
+	receive_shadows on
+
+	technique
+	{
+		pass
+		{
+			lighting on
+
+			ambient 1.0 1.0 1.0 1
+			diffuse 1.0 1.0 1.0 1
+			emissive 0 0 0 1
+
+			texture_unit{
+				texture gold.jpg
+				rotate_anim 0.01
+				scale 2 2
+			}
+		}
+	}
+}
