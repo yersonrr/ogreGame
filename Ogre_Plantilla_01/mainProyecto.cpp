@@ -261,7 +261,9 @@ public:
 				
 		Ogre::Entity* _entPObstaculo = mSceneMgr->createEntity("PistaObstaculo", "pisoObstaculo01.mesh");
 		_nodePObstaculo->attachObject(_entPObstaculo);
-		_entPObstaculo->setMaterialName("matPiso01");
+
+		_entPObstaculo->setMaterialName("matPiso02");
+		_entPObstaculo->setCastShadows(true);
 
 		//PisoNOObstaculo
 		Ogre::SceneNode* _nodePNObstaculo = mSceneMgr->createSceneNode("PistaNoObstaculo");
@@ -270,6 +272,8 @@ public:
 		Ogre::Entity* _entPNOObstaculo = mSceneMgr->createEntity("PistaNoObstaculo", "pisoNoObstaculo01.mesh");
 		_nodePNObstaculo->attachObject(_entPNOObstaculo);
 		_entPNOObstaculo->setMaterialName("matPiso03");
+		_entPNOObstaculo->setCastShadows(true);
+
 
 		//PosterInicioFinal
 		Ogre::SceneNode* _nodePoster = mSceneMgr->createSceneNode("PosterInicioFinal");
@@ -376,6 +380,7 @@ public:
 		_nodeArco1->translate(0,5,900);
 		_nodeArco1->setScale(15,5,15);
 		_nodeArco1->pitch(Degree(90));
+		_entArco1->setMaterialName("matArc1");
 
 		Ogre::SceneNode* _nodeArco2 = mSceneMgr->createSceneNode("Arco2");
 		mSceneMgr->getRootSceneNode()->addChild(_nodeArco2);
@@ -384,6 +389,7 @@ public:
 		_nodeArco2->translate(0,5,900);
 		_nodeArco2->setScale(20,10,20);
 		_nodeArco2->pitch(Degree(90));
+		_entArco2->setMaterialName("matArc2");
 
 		//Obstaculos 2nd Part
 
@@ -394,6 +400,7 @@ public:
 		_nodeArco3->translate(0,5,1320);
 		_nodeArco3->setScale(15,5,15);
 		_nodeArco3->pitch(Degree(90));
+		_entArco3->setMaterialName("matArc2");
 
 		Ogre::SceneNode* _nodeArco4 = mSceneMgr->createSceneNode("Arco4");
 		mSceneMgr->getRootSceneNode()->addChild(_nodeArco4);
@@ -402,6 +409,7 @@ public:
 		_nodeArco4->translate(0,5,1320);
 		_nodeArco4->setScale(20,10,20);
 		_nodeArco4->pitch(Degree(90));
+		_entArco4->setMaterialName("matArc1");
 
 		Ogre::SceneNode* _nodeObstaculo11 = mSceneMgr->createSceneNode("Obstaculo11");
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo11);
@@ -547,6 +555,7 @@ public:
 		_nodeSphere->attachObject(_entSphere);
 		_nodeSphere->translate(0,20,1900);
 		_nodeSphere->setScale(0.1,0.1,0.1);
+		_entSphere->setMaterialName("matSphere2");
 
 		Ogre::SceneNode* _nodeSphere2 = mSceneMgr->createSceneNode("Sphere2");
 		mSceneMgr->getRootSceneNode()->addChild(_nodeSphere2);
@@ -554,6 +563,7 @@ public:
 		_nodeSphere2->attachObject(_entSphere2);
 		_nodeSphere2->translate(0,50,1900);
 		_nodeSphere2->setScale(0.13,0.13,0.13);
+		_entSphere2->setMaterialName("matSphere2");
 
 		Ogre::SceneNode* _nodeArco5 = mSceneMgr->createSceneNode("Arco5");
 		mSceneMgr->getRootSceneNode()->addChild(_nodeArco5);
@@ -562,6 +572,7 @@ public:
 		_nodeArco5->translate(0,5,2350);
 		_nodeArco5->setScale(15,5,15);
 		_nodeArco5->pitch(Degree(90));
+		_entArco5->setMaterialName("matArc3");
 
 		Ogre::SceneNode* _nodeArco6 = mSceneMgr->createSceneNode("Arco6");
 		mSceneMgr->getRootSceneNode()->addChild(_nodeArco6);
@@ -570,6 +581,7 @@ public:
 		_nodeArco6->translate(0,5,2350);
 		_nodeArco6->setScale(20,10,20);
 		_nodeArco6->pitch(Degree(90));
+		_entArco6->setMaterialName("matArc2");
 
 		// Obstaculo 3th Part
 		Ogre::SceneNode* _nodeArco7 = mSceneMgr->createSceneNode("Arco7");
@@ -579,6 +591,7 @@ public:
 		_nodeArco7->translate(0,5,5500);
 		_nodeArco7->setScale(15,5,15);
 		_nodeArco7->pitch(Degree(90));
+		_entArco7->setMaterialName("matArc2");
 
 		Ogre::SceneNode* _nodeArco8 = mSceneMgr->createSceneNode("Arco8");
 		mSceneMgr->getRootSceneNode()->addChild(_nodeArco8);
@@ -587,6 +600,7 @@ public:
 		_nodeArco8->translate(0,5,5500);
 		_nodeArco8->setScale(20,10,20);
 		_nodeArco8->pitch(Degree(90));
+		_entArco8->setMaterialName("matArc3");
 
 		Ogre::SceneNode* _nodeObstaculo30 = mSceneMgr->createSceneNode("Obstaculo30");
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo30);
@@ -884,11 +898,61 @@ public:
 		_nodeAsteroid21->translate(-160,8,10000);
 		_nodeAsteroid21->setScale(0.5,1,1);
 
-
+		// Material
+		_entObstaculo->setMaterialName("matPiso01");
+		_entObstaculo2->setMaterialName("matPiso01");
+		_entObstaculo3->setMaterialName("matPiso01");
+		_entObstaculo4->setMaterialName("matPiso01");
+		_entObstaculo5->setMaterialName("matPiso01");
+		_entObstaculo6->setMaterialName("matPiso01");
+		_entObstaculo7->setMaterialName("matPiso01");
+		_entObstaculo8->setMaterialName("matPiso01");
+		_entObstaculo9->setMaterialName("matPiso01");
+		_entObstaculo10->setMaterialName("matPiso01");
+		_entObstaculo11->setMaterialName("matPiso01");
+		_entObstaculo12->setMaterialName("matPiso01");
+		_entObstaculo13->setMaterialName("matPiso01");
+		_entObstaculo14->setMaterialName("matPiso01");
+		_entObstaculo15->setMaterialName("matPiso01");
+		_entObstaculo16->setMaterialName("matPiso01");
+		_entObstaculo17->setMaterialName("matPiso01");
+		_entObstaculo18->setMaterialName("matPiso01");
+		_entObstaculo19->setMaterialName("matPiso01");
+		_entObstaculo20->setMaterialName("matPiso01");
+		_entObstaculo21->setMaterialName("matPiso01");
+		_entObstaculo22->setMaterialName("matPiso01");
+		_entObstaculo23->setMaterialName("matPiso01");
+		_entObstaculo24->setMaterialName("matPiso01");
+		_entObstaculo25->setMaterialName("matWall");
+		_entObstaculo26->setMaterialName("matWall");
+		_entObstaculo27->setMaterialName("matWall");
+		_entObstaculo28->setMaterialName("matWall");
+		_entObstaculo29->setMaterialName("matWall");
+		_entObstaculo30->setMaterialName("matWall");
+		_entObstaculo31->setMaterialName("matWall");
+		_entObstaculo32->setMaterialName("matWall");
+		_entObstaculo33->setMaterialName("matWall");
+		_entObstaculo34->setMaterialName("matWall");
+		_entObstaculo35->setMaterialName("matWall");
+		_entObstaculo36->setMaterialName("matWall");
+		_entObstaculo37->setMaterialName("matWall");
+		_entObstaculo38->setMaterialName("matWall");
+		_entObstaculo39->setMaterialName("matWall");
+		_entObstaculo40->setMaterialName("matWall");
+		_entObstaculo41->setMaterialName("matWall");
+		_entObstaculo42->setMaterialName("matWall");
+		_entObstaculo43->setMaterialName("matWall");
+		_entObstaculo44->setMaterialName("matWall");
+		_entObstaculo45->setMaterialName("matWall");
+		_entObstaculo46->setMaterialName("matWall");
+		_entObstaculo47->setMaterialName("matSphere");
+		_entObstaculo48->setMaterialName("matSphere");
+		
 		//TODO 5, 6, 7, 8 Lineal Animated
 		//TODO 9, 10 Diagonal Animated
+
 		//SPACE
-		mSceneMgr->setSkyDome(true, "matPropio05", 5, 8);
+		mSceneMgr->setSkyDome(true, "matSky", 5, 8);
 
 		// create wheels animations
 		for (int i=0; i<4; i++)
