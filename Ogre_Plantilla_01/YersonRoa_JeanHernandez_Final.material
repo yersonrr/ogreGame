@@ -60,7 +60,7 @@ material matWall
 	{
 		pass
 		{
-			lighting off
+			lighting on
 
 			ambient 1.0 1.0 1.0 1
 			diffuse 1.0 1.0 1.0 1
@@ -80,7 +80,7 @@ material matSky
 	{
 		pass
 		{
-			lighting off
+			lighting on
 
 			ambient 1.0 1.0 1.0 1
 			diffuse 1.0 1.0 1.0 1
@@ -145,8 +145,6 @@ material matSphere2
 
 material matArc1
 {
-	receive_shadows on 
-
 	technique
 	{
 		pass
@@ -168,8 +166,6 @@ material matArc1
 
 material matArc2
 {
-	receive_shadows on
-
 	technique
 	{
 		pass
@@ -191,8 +187,6 @@ material matArc2
 
 material matArc3
 {
-	receive_shadows on
-
 	technique
 	{
 		pass

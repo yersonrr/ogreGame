@@ -1,11 +1,17 @@
 #include "Ogre\ExampleApplication.h"
+#include "math.h"
 
 
 AnimationState * wheelState[4];
+AnimationState * asteroidState[9];
 char* wheelName[] = {"wheel1_anim", "wheel2_anim", "wheel3_anim", "wheel4_anim"};
 Ogre::SceneNode* _nodeRueda[4];
+Ogre::SceneNode* _nodeCoins[20];
+Ogre::Entity* _entCoins[20];
+bool isTakenCoin[20];
 bool is_accelerating = false;
 float time_accelerating = 0.0f;
+
 Ogre::AnimationState* animSphere;
 Ogre::AnimationState* animSphere2;
 Ogre::AnimationState* animAsteroid;
@@ -16,6 +22,9 @@ Ogre::AnimationState* animAsteroid9;
 Ogre::AnimationState* animAsteroid10;
 Ogre::AnimationState* animAsteroid11;
 Ogre::AnimationState* animAsteroid12;
+
+std::vector<Ogre::SceneNode *> obstacles;
+std::vector<Ogre::SceneNode *> coins;
 
 class FrameListenerClase : public Ogre::FrameListener{
 
@@ -44,17 +53,97 @@ public:
 		_node = node;
 	}
 
-
 	~FrameListenerClase(){
 		_man->destroyInputObject(_key);
 		OIS::InputManager::destroyInputSystem(_man);
+	}
+
+	bool collides_any_wall(Ogre::SceneNode *node) {
+		Ogre::Vector3 position = node->_getDerivedPosition();
+		if (position.z < 420){
+			if(position.x <= -128.5 || position.x >= 128.5) return true;
+		} else if (position.z < 2355){
+			if(position.x <= -205.5 || position.x >= 205.5) return true;
+		} else if (position.z < 4955 && position.z > 2900){
+			if(position.x <= -28 || position.x >= 28) return true;
+		} else if (position.z > 5500){
+			if(position.x <= -205.5 || position.x >= 205.5) return true;
+		} else if (position.z > 2300 && position.z < 2900 && position.x >= 0){
+			if(position.z > -3.76*position.x + 3108.33) return true;
+		} else if (position.z > 2300 && position.z < 2900 && position.x <= 0){
+			if(position.z > 3.76*position.x + 3050) return true;
+		} else if (position.z > 4900 && position.z < 5501 && position.x >= 0){
+			if(position.z < 3.53*position.x + 4780) return true;
+		} else if (position.z > 4900 && position.z < 5501 && position.x <= 0){
+			if(position.z < -3.53*position.x + 4780) return true;
+		}
+		return false;
+	}
+
+	bool collides(Ogre::SceneNode *node1, Ogre::SceneNode *node2) {
+		// determine if there is a sphere to sphere collision
+		Ogre::Vector3 diff = node1->_getDerivedPosition() - node2->_getDerivedPosition();
+		float distance = sqrt(diff.x*diff.x + diff.y*diff.y + diff.z*diff.z),
+		      radius1 = 20.0,
+			  radius2;
+		
+		Ogre::Vector3 scale = node2->getScale();
+		if (scale.x == 4.0 && scale.z == 4.0)
+			radius2 = 10.0;
+		else if (scale.x == 8.0 && scale.z == 2.0)
+			radius2 = 5.0;
+		else if (scale.x == 3.0 && scale.z == 3.0)
+			radius2 = 8.0;
+		else if (scale.x == 10.0 && scale.z == 1.0)
+			radius2 = 2.0;
+		else if (scale.x == 10.0 && scale.z == 10.0)
+			radius2 = 20.0;
+		else if (scale.x > 0.29 && scale.x < 0.31 && scale.z > 0.29 && scale.z < 0.31)
+			radius2 = 20.0;
+		else if (scale.x == 5.0 && scale.z == 5.0)
+			radius2 = 65.0;
+		else if (scale.x == 2.0 && scale.z == 2.0)
+			radius2 = 5.0;
+		else if (scale.x < 1.9 && scale.z < 1.9)
+			radius2 = 3.0;
+		else if (scale.x == 7.0 && scale.z == 4.0)
+			radius2 = 15.0;
+		else if (scale.x == 6.0 && scale.z == 4.0)
+			radius2 = 14.0;
+		else radius2 = 10.0;
+		return distance < radius1 + radius2;
+	}
+
+	int collides_any_obstacle(Ogre::SceneNode *node, std::vector<Ogre::SceneNode *> obstacles) {
+		for (int i=0; i<obstacles.size(); i++) {
+			if (collides(node, obstacles[i])) return i;
+		}
+		return -1;
+	}
+
+	bool collidesCoin(Ogre::SceneNode *node1, Ogre::SceneNode *node2) {
+		// determine if there is a sphere to sphere collision
+		Ogre::Vector3 diff = node1->_getDerivedPosition() - node2->_getDerivedPosition();
+		float distance = sqrt(diff.x*diff.x + diff.y*diff.y + diff.z*diff.z),
+		      radius1 = 20.0,
+			  radius2 = 10.0;
+		Ogre::Vector3 scale = node2->getScale();
+		
+		return distance < radius1 + radius2;
+	}
+
+	int collides_any_coin(Ogre::SceneNode *node) {
+		for (int i=0; i<coins.size(); i++) {
+			if (collidesCoin(node, coins[i])) return i;
+		}
+		return -1;
 	}
 
 	bool frameStarted(const Ogre::FrameEvent &evt){
 		_key->capture();
 
 		float movSpeed=3.0;
-		float rotSpeed=5.0;
+		float rotSpeed=1.0;
 		Ogre::Vector3 tmov(0,0,0);
 		float trot = 0.0;
 
@@ -117,12 +206,16 @@ public:
 		}
 
 		// car control
+		Ogre::Vector3 initial_position = _node->_getDerivedPosition();
 		_node->yaw(Ogre::Degree(trot));
 		_node->translate(_node->getOrientation() * tmov * evt.timeSinceLastFrame * movSpeed);
 
 		//Sphere Animation
 		animSphere->addTime(evt.timeSinceLastFrame);
 		animSphere2->addTime(evt.timeSinceLastFrame);
+
+		for(int i=0; i<9; i++)
+			asteroidState[i]->addTime(evt.timeSinceLastFrame);
 
 		// Asteroid Animation
 		animAsteroid->addTime(evt.timeSinceLastFrame);
@@ -133,6 +226,34 @@ public:
 		animAsteroid10->addTime(evt.timeSinceLastFrame);
 		animAsteroid11->addTime(evt.timeSinceLastFrame);
 		animAsteroid12->addTime(evt.timeSinceLastFrame);
+
+		int aux = collides_any_obstacle(_node, obstacles);
+		if ( aux != -1 || collides_any_wall(_node)) {
+
+			if(aux > 46 && aux < 54){
+				_node->_setDerivedPosition(Vector3(0, 0, 6100));
+				_node->yaw(Ogre::Degree(-trot));
+			} else if(aux > 53 && aux < 62){
+				_node->_setDerivedPosition(Vector3(0, 0, 6900));
+				_node->yaw(Ogre::Degree(-trot));
+			} else if(aux > 60 && aux < 71){
+				_node->_setDerivedPosition(Vector3(0, 0, 8150));
+				_node->yaw(Ogre::Degree(-trot));	
+			} else {
+				_node->_setDerivedPosition(initial_position);
+				_node->yaw(Ogre::Degree(-trot));
+			}
+		}
+
+		aux = collides_any_coin(_node);
+		if (aux != -1){
+			if(!isTakenCoin[aux]){
+				_nodeCoins[aux]->setVisible(false, true);
+				isTakenCoin[aux] = true;
+				// Add to score
+			}
+		}
+
 		return true;
 	}
 };
@@ -169,6 +290,29 @@ public:
 		mCamera->setNearClipDistance(1);
 	}
 
+	void createCoin(String name, String entity, int index, int x, int z){
+		_nodeCoins[index] = mSceneMgr->createSceneNode(name);
+		mSceneMgr->getRootSceneNode()->addChild(_nodeCoins[index]);
+		coins.push_back(_nodeCoins[index]);
+		_entCoins[index] = mSceneMgr->createEntity(entity, "cilindro01.mesh");
+		_nodeCoins[index]->attachObject(_entCoins[index]);
+		_nodeCoins[index]->translate(x,8,z);
+		_nodeCoins[index]->setScale(3,0.1,3);
+		_nodeCoins[index]->pitch(Degree(90));
+		_entCoins[index]->setMaterialName("matArc3");
+	}
+
+	void createWall(String name, String entity, int x, int z){
+		Ogre::SceneNode* _nodeWall = mSceneMgr->createSceneNode(name);
+		mSceneMgr->getRootSceneNode()->addChild(_nodeWall);
+		obstacles.push_back(_nodeWall);
+		Ogre::Entity* _entWall = mSceneMgr->createEntity(entity, "cubo01.mesh");
+		_nodeWall->attachObject(_entWall);
+		_nodeWall->yaw(Degree(45));
+		_nodeWall->translate(x,5,z);
+		_nodeWall->setScale(4,4,4);
+	}
+
 	void createWheelAnimation(int wheel_index) {
 		// create animation to move wheels
 		Real duration = 0.5;
@@ -193,36 +337,78 @@ public:
 		wheelState[wheel_index] = mSceneMgr->createAnimationState(wheelName[wheel_index]);
 	}
 
+	void createAsteroidAnimation(String name, int positionX, Ogre::SceneNode* node, int index) {
+		// create animation to move wheels
+		Real duration = 4;
+		Animation* animation = mSceneMgr->createAnimation(name, duration);
+		animation->setInterpolationMode(Animation::IM_SPLINE);
+		NodeAnimationTrack* track = animation->createNodeTrack(0, node);
+
+		int y,z,y2,z2, y3, z3;
+		y = std::rand()%(50+50)-50;
+		z = std::rand()%(10000-8000)+8000;
+
+		y2 = std::rand()%(50+50)-50;
+		z2 = std::rand()%(10000-8000)+8000;
+
+		y3 = std::rand()%(50+50)-50;
+		z3 = std::rand()%(10000-8000)+8000;
+
+		// add keyframes
+		TransformKeyFrame* key;
+ 
+		key = track->createNodeKeyFrame(0.0);
+		key->setTranslate(Vector3(positionX, y, z));
+
+		key = track->createNodeKeyFrame(2.0);
+		key->setTranslate(Vector3(positionX, y2, z2));
+
+		key = track->createNodeKeyFrame(4.0);
+		key->setTranslate(Vector3(positionX, y3, z3));
+
+		asteroidState[index] = mSceneMgr->createAnimationState(name);
+		asteroidState[index]->setEnabled(true);
+		asteroidState[index]->setLoop(true);
+	}
+
 	void createScene()
 	{
-		mSceneMgr->setAmbientLight(Ogre::ColourValue(1.0, 1.0, 1.0));
-		mSceneMgr->setShadowTechnique(Ogre::SHADOWTYPE_STENCIL_ADDITIVE);
+		mSceneMgr->setAmbientLight(Ogre::ColourValue(0.0, 0.0, 0.0));
+		//mSceneMgr->setShadowTechnique(Ogre::SHADOWTYPE_STENCIL_MODULATIVE);
 		
 		Ogre::Light* LuzPuntual01 = mSceneMgr->createLight("Luz01");
 		LuzPuntual01->setType(Ogre::Light::LT_DIRECTIONAL);
 		LuzPuntual01->setDiffuseColour(1.0,1.0,1.0);
+		//LuzPuntual01->setDirection(Ogre::Vector3( 0, -1, -1 ));
 		LuzPuntual01->setDirection(Ogre::Vector3( 1, -1, -1 ));
 		
-		Ogre::Light* LuzPuntual02 = mSceneMgr->createLight("Luz02");
-		LuzPuntual02->setType(Ogre::Light::LT_DIRECTIONAL);
-		LuzPuntual02->setDiffuseColour(1.0,1.0,1.0);
-		LuzPuntual02->setDirection(Ogre::Vector3( -1, -1, -1 ));
+		Ogre::Light* LuzPuntual03 = mSceneMgr->createLight("Luz03");
+		LuzPuntual03->setType(Ogre::Light::LT_DIRECTIONAL);
+		LuzPuntual03->setDiffuseColour(1.0,1.0,1.0);
+		//LuzPuntual03->setDirection(Ogre::Vector3( 0, -1, 1 ));
+		LuzPuntual03->setDirection(Ogre::Vector3( -1, -1, -1 ));
 
 		//Chasis
 		_nodeChasis01 = mSceneMgr->createSceneNode("Chasis01");
 		_nodeChasis01->attachObject(mCamera);
 
 		// chasis light
+		/*Ogre::Light* pointLight = mSceneMgr->createLight("pointLight");
+		pointLight->setType(Ogre::Light::LT_POINT);
+		pointLight->setDiffuseColour(1.0, 1.0, 1.0);
+		pointLight->setSpecularColour(1.0, 1.0, 1.0);
+		pointLight->setPosition(Ogre::Vector3(0, 30, -10));
+		_nodeChasis01->attachObject(pointLight);*/
 		Ogre::Light* spotLight = mSceneMgr->createLight("spotLight");
 		spotLight->setType(Ogre::Light::LT_SPOTLIGHT);
 		spotLight->setDiffuseColour(1.0, 1.0, 1.0);
 		spotLight->setPosition(Ogre::Vector3(0, 20, 0));
-		spotLight->setDirection(Ogre::Vector3(0, 20, 1000));
+		spotLight->setDirection(Ogre::Vector3(0, 50, 1));
 		spotLight->setSpotlightRange(Ogre::Degree(10), Ogre::Degree(35));
 		_nodeChasis01->attachObject(spotLight);
 
 		mSceneMgr->getRootSceneNode()->addChild(_nodeChasis01);
-			
+		
 		_entChasis01 = mSceneMgr->createEntity("entChasis01", "chasisCarro.mesh");
 		_entChasis01->setMaterialName("shCarro01");
 		_nodeChasis01->attachObject(_entChasis01);
@@ -318,6 +504,7 @@ public:
 
 		//Obstaculos 
 		Ogre::SceneNode* _nodeObstaculo1 = mSceneMgr->createSceneNode("Obstaculo01");
+		obstacles.push_back(_nodeObstaculo1);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo1);
 		Ogre::Entity* _entObstaculo = mSceneMgr->createEntity("entObstaculo01", "cubo01.mesh");
 		_nodeObstaculo1->attachObject(_entObstaculo);
@@ -325,6 +512,7 @@ public:
 		_nodeObstaculo1->setScale(4,4,4);
 		
 		Ogre::SceneNode* _nodeObstaculo2 = mSceneMgr->createSceneNode("Obstaculo02");
+		obstacles.push_back(_nodeObstaculo2);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo2);
 		Ogre::Entity* _entObstaculo2 = mSceneMgr->createEntity("entObstaculo02", "cubo02.mesh");
 		_nodeObstaculo2->attachObject(_entObstaculo2);
@@ -332,6 +520,7 @@ public:
 		_nodeObstaculo2->setScale(4,4,4);
 		
 		Ogre::SceneNode* _nodeObstaculo3 = mSceneMgr->createSceneNode("Obstaculo03");
+		obstacles.push_back(_nodeObstaculo3);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo3);
 		Ogre::Entity* _entObstaculo3 = mSceneMgr->createEntity("entObstaculo03", "cubo01.mesh");
 		_nodeObstaculo3->attachObject(_entObstaculo3);
@@ -340,6 +529,7 @@ public:
 		_nodeObstaculo3->setScale(4,4,4);
 
 		Ogre::SceneNode* _nodeObstaculo4 = mSceneMgr->createSceneNode("Obstaculo04");
+		obstacles.push_back(_nodeObstaculo4);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo4);
 		Ogre::Entity* _entObstaculo4 = mSceneMgr->createEntity("entObstaculo04", "cubo01.mesh");
 		_nodeObstaculo4->attachObject(_entObstaculo4);
@@ -348,6 +538,7 @@ public:
 		_nodeObstaculo4->setScale(4,4,4);
 
 		Ogre::SceneNode* _nodeObstaculo5 = mSceneMgr->createSceneNode("Obstaculo05");
+		obstacles.push_back(_nodeObstaculo5);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo5);
 		Ogre::Entity* _entObstaculo5 = mSceneMgr->createEntity("entObstaculo05", "cubo02.mesh");
 		_nodeObstaculo5->attachObject(_entObstaculo5);
@@ -355,6 +546,7 @@ public:
 		_nodeObstaculo5->setScale(4,4,4);
 
 		Ogre::SceneNode* _nodeObstaculo6 = mSceneMgr->createSceneNode("Obstaculo06");
+		obstacles.push_back(_nodeObstaculo6);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo6);
 		Ogre::Entity* _entObstaculo6 = mSceneMgr->createEntity("entObstaculo06", "cubo02.mesh");
 		_nodeObstaculo6->attachObject(_entObstaculo6);
@@ -362,6 +554,7 @@ public:
 		_nodeObstaculo6->setScale(4,4,4);
 
 		Ogre::SceneNode* _nodeObstaculo7 = mSceneMgr->createSceneNode("Obstaculo07");
+		obstacles.push_back(_nodeObstaculo7);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo7);
 		Ogre::Entity* _entObstaculo7 = mSceneMgr->createEntity("entObstaculo07", "cubo01.mesh");
 		_nodeObstaculo7->attachObject(_entObstaculo7);
@@ -369,6 +562,7 @@ public:
 		_nodeObstaculo7->setScale(4,4,4);
 
 		Ogre::SceneNode* _nodeObstaculo8 = mSceneMgr->createSceneNode("Obstaculo08");
+		obstacles.push_back(_nodeObstaculo8);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo8);
 		Ogre::Entity* _entObstaculo8 = mSceneMgr->createEntity("entObstaculo08", "cubo02.mesh");
 		_nodeObstaculo8->attachObject(_entObstaculo8);
@@ -376,6 +570,7 @@ public:
 		_nodeObstaculo8->setScale(4,4,4);
 
 		Ogre::SceneNode* _nodeObstaculo9 = mSceneMgr->createSceneNode("Obstaculo09");
+		obstacles.push_back(_nodeObstaculo9);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo9);
 		Ogre::Entity* _entObstaculo9 = mSceneMgr->createEntity("entObstaculo09", "cubo02.mesh");
 		_nodeObstaculo9->attachObject(_entObstaculo9);
@@ -383,6 +578,7 @@ public:
 		_nodeObstaculo9->setScale(4,4,4);
 
 		Ogre::SceneNode* _nodeObstaculo10 = mSceneMgr->createSceneNode("Obstaculo10");
+		obstacles.push_back(_nodeObstaculo10);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo10);
 		Ogre::Entity* _entObstaculo10 = mSceneMgr->createEntity("entObstaculo10", "cubo02.mesh");
 		_nodeObstaculo10->attachObject(_entObstaculo10);
@@ -428,6 +624,7 @@ public:
 		_entArco4->setMaterialName("matArc1");
 
 		Ogre::SceneNode* _nodeObstaculo11 = mSceneMgr->createSceneNode("Obstaculo11");
+		obstacles.push_back(_nodeObstaculo11);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo11);
 		Ogre::Entity* _entObstaculo11 = mSceneMgr->createEntity("entObstaculo11", "cubo02.mesh");
 		_nodeObstaculo11->attachObject(_entObstaculo11);
@@ -435,6 +632,7 @@ public:
 		_nodeObstaculo11->setScale(4,4,4);
 
 		Ogre::SceneNode* _nodeObstaculo12 = mSceneMgr->createSceneNode("Obstaculo12");
+		obstacles.push_back(_nodeObstaculo12);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo12);
 		Ogre::Entity* _entObstaculo12 = mSceneMgr->createEntity("entObstaculo12", "cubo02.mesh");
 		_nodeObstaculo12->attachObject(_entObstaculo12);
@@ -443,6 +641,7 @@ public:
 
 		
 		Ogre::SceneNode* _nodeObstaculo13 = mSceneMgr->createSceneNode("Obstaculo13");
+		obstacles.push_back(_nodeObstaculo13);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo13);
 		Ogre::Entity* _entObstaculo13 = mSceneMgr->createEntity("entObstaculo13", "cubo02.mesh");
 		_nodeObstaculo13->attachObject(_entObstaculo13);
@@ -450,6 +649,7 @@ public:
 		_nodeObstaculo13->setScale(4,4,4);
 
 		Ogre::SceneNode* _nodeObstaculo14 = mSceneMgr->createSceneNode("Obstaculo14");
+		obstacles.push_back(_nodeObstaculo14);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo14);
 		Ogre::Entity* _entObstaculo14 = mSceneMgr->createEntity("entObstaculo14", "cubo02.mesh");
 		_nodeObstaculo14->attachObject(_entObstaculo14);
@@ -457,6 +657,7 @@ public:
 		_nodeObstaculo14->setScale(4,4,4);
 
 		Ogre::SceneNode* _nodeObstaculo15 = mSceneMgr->createSceneNode("Obstaculo15");
+		obstacles.push_back(_nodeObstaculo15);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo15);
 		Ogre::Entity* _entObstaculo15 = mSceneMgr->createEntity("entObstaculo15", "cubo02.mesh");
 		_nodeObstaculo15->attachObject(_entObstaculo15);
@@ -464,6 +665,7 @@ public:
 		_nodeObstaculo15->setScale(4,4,4);
 
 		Ogre::SceneNode* _nodeObstaculo16 = mSceneMgr->createSceneNode("Obstaculo16");
+		obstacles.push_back(_nodeObstaculo16);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo16);
 		Ogre::Entity* _entObstaculo16 = mSceneMgr->createEntity("entObstaculo16", "cubo02.mesh");
 		_nodeObstaculo16->attachObject(_entObstaculo16);
@@ -471,6 +673,7 @@ public:
 		_nodeObstaculo16->setScale(4,4,4);
 
 		Ogre::SceneNode* _nodeObstaculo17 = mSceneMgr->createSceneNode("Obstaculo17");
+		obstacles.push_back(_nodeObstaculo17);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo17);
 		Ogre::Entity* _entObstaculo17 = mSceneMgr->createEntity("entObstaculo17", "cubo02.mesh");
 		_nodeObstaculo17->attachObject(_entObstaculo17);
@@ -478,6 +681,7 @@ public:
 		_nodeObstaculo17->setScale(4,4,4);
 
 		Ogre::SceneNode* _nodeObstaculo18 = mSceneMgr->createSceneNode("Obstaculo18");
+		obstacles.push_back(_nodeObstaculo18);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo18);
 		Ogre::Entity* _entObstaculo18 = mSceneMgr->createEntity("entObstaculo18", "cubo02.mesh");
 		_nodeObstaculo18->attachObject(_entObstaculo18);
@@ -485,6 +689,7 @@ public:
 		_nodeObstaculo18->setScale(4,4,4);
 
 		Ogre::SceneNode* _nodeObstaculo19 = mSceneMgr->createSceneNode("Obstaculo19");
+		obstacles.push_back(_nodeObstaculo19);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo19);
 		Ogre::Entity* _entObstaculo19 = mSceneMgr->createEntity("entObstaculo19", "cubo02.mesh");
 		_nodeObstaculo19->attachObject(_entObstaculo19);
@@ -492,6 +697,7 @@ public:
 		_nodeObstaculo19->setScale(4,4,4);
 
 		Ogre::SceneNode* _nodeObstaculo20 = mSceneMgr->createSceneNode("Obstaculo20");
+		obstacles.push_back(_nodeObstaculo20);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo20);
 		Ogre::Entity* _entObstaculo20 = mSceneMgr->createEntity("entObstaculo20", "cubo01.mesh");
 		_nodeObstaculo20->attachObject(_entObstaculo20);
@@ -500,6 +706,7 @@ public:
 		_nodeObstaculo20->yaw(Degree(-45));
 
 		Ogre::SceneNode* _nodeObstaculo21 = mSceneMgr->createSceneNode("Obstaculo21");
+		obstacles.push_back(_nodeObstaculo21);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo21);
 		Ogre::Entity* _entObstaculo21 = mSceneMgr->createEntity("entObstaculo21", "cubo01.mesh");
 		_nodeObstaculo21->attachObject(_entObstaculo21);
@@ -508,6 +715,7 @@ public:
 		_nodeObstaculo21->yaw(Degree(45));
 
 		Ogre::SceneNode* _nodeObstaculo22 = mSceneMgr->createSceneNode("Obstaculo22");
+		obstacles.push_back(_nodeObstaculo22);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo22);
 		Ogre::Entity* _entObstaculo22 = mSceneMgr->createEntity("entObstaculo22", "cubo01.mesh");
 		_nodeObstaculo22->attachObject(_entObstaculo22);
@@ -516,6 +724,7 @@ public:
 		_nodeObstaculo22->yaw(Degree(45));
 
 		Ogre::SceneNode* _nodeObstaculo23 = mSceneMgr->createSceneNode("Obstaculo23");
+		obstacles.push_back(_nodeObstaculo23);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo23);
 		Ogre::Entity* _entObstaculo23 = mSceneMgr->createEntity("entObstaculo23", "cubo01.mesh");
 		_nodeObstaculo23->attachObject(_entObstaculo23);
@@ -524,6 +733,7 @@ public:
 		_nodeObstaculo23->yaw(Degree(-45));
 
 		Ogre::SceneNode* _nodeObstaculo24 = mSceneMgr->createSceneNode("Obstaculo24");
+		obstacles.push_back(_nodeObstaculo24);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo24);
 		Ogre::Entity* _entObstaculo24 = mSceneMgr->createEntity("entObstaculo24", "cubo01.mesh");
 		_nodeObstaculo24->attachObject(_entObstaculo24);
@@ -531,6 +741,7 @@ public:
 		_nodeObstaculo24->setScale(3,4,3);
 
 		Ogre::SceneNode* _nodeObstaculo25 = mSceneMgr->createSceneNode("Obstaculo25");
+		obstacles.push_back(_nodeObstaculo25);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo25);
 		Ogre::Entity* _entObstaculo25 = mSceneMgr->createEntity("entObstaculo25", "cubo01.mesh");
 		_nodeObstaculo25->attachObject(_entObstaculo25);
@@ -538,6 +749,7 @@ public:
 		_nodeObstaculo25->setScale(3,4,3);
 
 		Ogre::SceneNode* _nodeObstaculo26 = mSceneMgr->createSceneNode("Obstaculo26");
+		obstacles.push_back(_nodeObstaculo26);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo26);
 		Ogre::Entity* _entObstaculo26 = mSceneMgr->createEntity("entObstaculo26", "cubo02.mesh");
 		_nodeObstaculo26->attachObject(_entObstaculo26);
@@ -545,6 +757,7 @@ public:
 		_nodeObstaculo26->setScale(4,4,4);
 
 		Ogre::SceneNode* _nodeObstaculo27 = mSceneMgr->createSceneNode("Obstaculo27");
+		obstacles.push_back(_nodeObstaculo27);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo27);
 		Ogre::Entity* _entObstaculo27 = mSceneMgr->createEntity("entObstaculo27", "cubo02.mesh");
 		_nodeObstaculo27->attachObject(_entObstaculo27);
@@ -552,6 +765,7 @@ public:
 		_nodeObstaculo27->setScale(4,4,4);
 
 		Ogre::SceneNode* _nodeObstaculo28 = mSceneMgr->createSceneNode("Obstaculo28");
+		obstacles.push_back(_nodeObstaculo28);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo28);
 		Ogre::Entity* _entObstaculo28 = mSceneMgr->createEntity("entObstaculo28", "cubo02.mesh");
 		_nodeObstaculo28->attachObject(_entObstaculo28);
@@ -559,6 +773,7 @@ public:
 		_nodeObstaculo28->setScale(4,4,4);
 
 		Ogre::SceneNode* _nodeObstaculo29 = mSceneMgr->createSceneNode("Obstaculo29");
+		obstacles.push_back(_nodeObstaculo29);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo29);
 		Ogre::Entity* _entObstaculo29 = mSceneMgr->createEntity("entObstaculo29", "cubo02.mesh");
 		_nodeObstaculo29->attachObject(_entObstaculo29);
@@ -566,6 +781,7 @@ public:
 		_nodeObstaculo29->setScale(3,5,3);
 
 		Ogre::SceneNode* _nodeSphere = mSceneMgr->createSceneNode("Sphere");
+		obstacles.push_back(_nodeSphere);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeSphere);
 		Ogre::Entity* _entSphere = mSceneMgr->createEntity("entSphere", "sphere.mesh");
 		_nodeSphere->attachObject(_entSphere);
@@ -574,6 +790,7 @@ public:
 		_entSphere->setMaterialName("matSphere2");
 
 		Ogre::SceneNode* _nodeSphere2 = mSceneMgr->createSceneNode("Sphere2");
+		obstacles.push_back(_nodeSphere2);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeSphere2);
 		Ogre::Entity* _entSphere2 = mSceneMgr->createEntity("entSphere2", "sphere.mesh");
 		_nodeSphere2->attachObject(_entSphere2);
@@ -619,6 +836,7 @@ public:
 		_entArco8->setMaterialName("matArc3");
 
 		Ogre::SceneNode* _nodeObstaculo30 = mSceneMgr->createSceneNode("Obstaculo30");
+		obstacles.push_back(_nodeObstaculo30);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo30);
 		Ogre::Entity* _entObstaculo30 = mSceneMgr->createEntity("entObstaculo30", "cubo01.mesh");
 		_nodeObstaculo30->attachObject(_entObstaculo30);
@@ -627,6 +845,7 @@ public:
 		_nodeObstaculo30->yaw(Degree(45));
 
 		Ogre::SceneNode* _nodeObstaculo31 = mSceneMgr->createSceneNode("Obstaculo31");
+		obstacles.push_back(_nodeObstaculo31);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo31);
 		Ogre::Entity* _entObstaculo31 = mSceneMgr->createEntity("entObstaculo31", "cubo01.mesh");
 		_nodeObstaculo31->attachObject(_entObstaculo31);
@@ -635,6 +854,7 @@ public:
 		_nodeObstaculo31->yaw(Degree(-45));
 
 		Ogre::SceneNode* _nodeObstaculo32 = mSceneMgr->createSceneNode("Obstaculo32");
+		obstacles.push_back(_nodeObstaculo32);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo32);
 		Ogre::Entity* _entObstaculo32 = mSceneMgr->createEntity("entObstaculo32", "cubo01.mesh");
 		_nodeObstaculo32->attachObject(_entObstaculo32);
@@ -643,6 +863,7 @@ public:
 		_nodeObstaculo32->yaw(Degree(-45));
 
 		Ogre::SceneNode* _nodeObstaculo33 = mSceneMgr->createSceneNode("Obstaculo33");
+		obstacles.push_back(_nodeObstaculo33);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo33);
 		Ogre::Entity* _entObstaculo33 = mSceneMgr->createEntity("entObstaculo33", "cubo01.mesh");
 		_nodeObstaculo33->attachObject(_entObstaculo33);
@@ -651,6 +872,7 @@ public:
 		_nodeObstaculo33->yaw(Degree(-45));
 
 		Ogre::SceneNode* _nodeObstaculo34 = mSceneMgr->createSceneNode("Obstaculo34");
+		obstacles.push_back(_nodeObstaculo34);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo34);
 		Ogre::Entity* _entObstaculo34 = mSceneMgr->createEntity("entObstaculo34", "cubo01.mesh");
 		_nodeObstaculo34->attachObject(_entObstaculo34);
@@ -659,6 +881,7 @@ public:
 		_nodeObstaculo34->yaw(Degree(-45));
 
 		Ogre::SceneNode* _nodeObstaculo35 = mSceneMgr->createSceneNode("Obstaculo35");
+		obstacles.push_back(_nodeObstaculo35);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo35);
 		Ogre::Entity* _entObstaculo35 = mSceneMgr->createEntity("entObstaculo35", "cubo01.mesh");
 		_nodeObstaculo35->attachObject(_entObstaculo35);
@@ -667,6 +890,7 @@ public:
 		_nodeObstaculo35->yaw(Degree(90));
 
 		Ogre::SceneNode* _nodeObstaculo36 = mSceneMgr->createSceneNode("Obstaculo36");
+		obstacles.push_back(_nodeObstaculo36);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo36);
 		Ogre::Entity* _entObstaculo36 = mSceneMgr->createEntity("entObstaculo36", "cubo01.mesh");
 		_nodeObstaculo36->attachObject(_entObstaculo36);
@@ -675,6 +899,7 @@ public:
 		_nodeObstaculo36->yaw(Degree(90));
 
 		Ogre::SceneNode* _nodeObstaculo37 = mSceneMgr->createSceneNode("Obstaculo37");
+		obstacles.push_back(_nodeObstaculo37);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo37);
 		Ogre::Entity* _entObstaculo37 = mSceneMgr->createEntity("entObstaculo37", "cubo01.mesh");
 		_nodeObstaculo37->attachObject(_entObstaculo37);
@@ -683,6 +908,7 @@ public:
 		_nodeObstaculo37->yaw(Degree(90));
 
 		Ogre::SceneNode* _nodeObstaculo38 = mSceneMgr->createSceneNode("Obstaculo38");
+		obstacles.push_back(_nodeObstaculo38);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo38);
 		Ogre::Entity* _entObstaculo38 = mSceneMgr->createEntity("entObstaculo38", "cubo01.mesh");
 		_nodeObstaculo38->attachObject(_entObstaculo38);
@@ -691,6 +917,7 @@ public:
 		_nodeObstaculo38->yaw(Degree(90));
 
 		Ogre::SceneNode* _nodeObstaculo39 = mSceneMgr->createSceneNode("Obstaculo39");
+		obstacles.push_back(_nodeObstaculo39);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo39);
 		Ogre::Entity* _entObstaculo39 = mSceneMgr->createEntity("entObstaculo39", "cubo01.mesh");
 		_nodeObstaculo39->attachObject(_entObstaculo39);
@@ -698,6 +925,7 @@ public:
 		_nodeObstaculo39->setScale(10,0.5,10);
 		
 		Ogre::SceneNode* _nodeObstaculo40 = mSceneMgr->createSceneNode("Obstaculo40");
+		obstacles.push_back(_nodeObstaculo40);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo40);
 		Ogre::Entity* _entObstaculo40 = mSceneMgr->createEntity("entObstaculo40", "cubo01.mesh");
 		_nodeObstaculo40->attachObject(_entObstaculo40);
@@ -705,6 +933,7 @@ public:
 		_nodeObstaculo40->setScale(4,8,4);
 
 		Ogre::SceneNode* _nodeObstaculo45 = mSceneMgr->createSceneNode("Obstaculo45");
+		obstacles.push_back(_nodeObstaculo45);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo45);
 		Ogre::Entity* _entObstaculo45 = mSceneMgr->createEntity("entObstaculo45", "cubo01.mesh");
 		_nodeObstaculo45->attachObject(_entObstaculo45);
@@ -712,6 +941,7 @@ public:
 		_nodeObstaculo45->setScale(4,8,4);
 
 		Ogre::SceneNode* _nodeObstaculo46 = mSceneMgr->createSceneNode("Obstaculo46");
+		obstacles.push_back(_nodeObstaculo46);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo46);
 		Ogre::Entity* _entObstaculo46 = mSceneMgr->createEntity("entObstaculo46", "cubo01.mesh");
 		_nodeObstaculo46->attachObject(_entObstaculo46);
@@ -719,6 +949,7 @@ public:
 		_nodeObstaculo46->setScale(4,8,4);
 
 		Ogre::SceneNode* _nodeObstaculo41 = mSceneMgr->createSceneNode("Obstaculo41");
+		obstacles.push_back(_nodeObstaculo41);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo41);
 		Ogre::Entity* _entObstaculo41 = mSceneMgr->createEntity("entObstaculo41", "cubo02.mesh");
 		_nodeObstaculo41->attachObject(_entObstaculo41);
@@ -726,6 +957,7 @@ public:
 		_nodeObstaculo41->setScale(4,8,4);
 
 		Ogre::SceneNode* _nodeObstaculo43 = mSceneMgr->createSceneNode("Obstaculo43");
+		obstacles.push_back(_nodeObstaculo43);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo43);
 		Ogre::Entity* _entObstaculo43 = mSceneMgr->createEntity("entObstaculo43", "cubo02.mesh");
 		_nodeObstaculo43->attachObject(_entObstaculo43);
@@ -733,6 +965,7 @@ public:
 		_nodeObstaculo43->setScale(4,8,4);
 
 		Ogre::SceneNode* _nodeObstaculo42 = mSceneMgr->createSceneNode("Obstaculo42");
+		obstacles.push_back(_nodeObstaculo42);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo42);
 		Ogre::Entity* _entObstaculo42 = mSceneMgr->createEntity("entObstaculo42", "cubo02.mesh");
 		_nodeObstaculo42->attachObject(_entObstaculo42);
@@ -740,6 +973,7 @@ public:
 		_nodeObstaculo42->setScale(4,8,4);
 
 		Ogre::SceneNode* _nodeObstaculo44 = mSceneMgr->createSceneNode("Obstaculo44");
+		obstacles.push_back(_nodeObstaculo44);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo44);
 		Ogre::Entity* _entObstaculo44 = mSceneMgr->createEntity("entObstaculo44", "cubo02.mesh");
 		_nodeObstaculo44->attachObject(_entObstaculo44);
@@ -747,6 +981,7 @@ public:
 		_nodeObstaculo44->setScale(4,8,4);
 
 		Ogre::SceneNode* _nodeObstaculo47 = mSceneMgr->createSceneNode("Obstaculo47");
+		obstacles.push_back(_nodeObstaculo47);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo47);
 		Ogre::Entity* _entObstaculo47 = mSceneMgr->createEntity("entObstaculo47", "sphere.mesh");
 		_nodeObstaculo47->attachObject(_entObstaculo47);
@@ -786,6 +1021,7 @@ public:
 		animSphere->setLoop(true);
 
 		Ogre::SceneNode* _nodeObstaculo48 = mSceneMgr->createSceneNode("Obstaculo48");
+		obstacles.push_back(_nodeObstaculo48);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo48);
 		Ogre::Entity* _entObstaculo48 = mSceneMgr->createEntity("entObstaculo48", "sphere.mesh");
 		_nodeObstaculo48->attachObject(_entObstaculo48);
@@ -826,6 +1062,7 @@ public:
 
 		// Asteroides
 		Ogre::SceneNode* _nodeAsteroid01 = mSceneMgr->createSceneNode("Asteroid01");
+		obstacles.push_back(_nodeAsteroid01);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeAsteroid01);
 		Ogre::Entity* _entAsteroid01 = mSceneMgr->createEntity("entAsteroid01", "roca01.mesh");
 		_nodeAsteroid01->attachObject(_entAsteroid01);
@@ -833,6 +1070,7 @@ public:
 		_nodeAsteroid01->setScale(5,5,5);
 
 		Ogre::SceneNode* _nodeAsteroid02 = mSceneMgr->createSceneNode("Asteroid02");
+		obstacles.push_back(_nodeAsteroid02);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeAsteroid02);
 		Ogre::Entity* _entAsteroid02 = mSceneMgr->createEntity("entAsteroid02", "roca02.mesh");
 		_nodeAsteroid02->attachObject(_entAsteroid02);
@@ -840,6 +1078,7 @@ public:
 		_nodeAsteroid02->setScale(5,5,5);
 
 		Ogre::SceneNode* _nodeAsteroid03 = mSceneMgr->createSceneNode("Asteroid03");
+		obstacles.push_back(_nodeAsteroid03);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeAsteroid03);
 		Ogre::Entity* _entAsteroid03 = mSceneMgr->createEntity("entAsteroid03", "roca03.mesh");
 		_nodeAsteroid03->attachObject(_entAsteroid03);
@@ -847,6 +1086,7 @@ public:
 		_nodeAsteroid03->setScale(5,5,5);
 
 		Ogre::SceneNode* _nodeAsteroid04 = mSceneMgr->createSceneNode("Asteroid04");
+		obstacles.push_back(_nodeAsteroid04);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeAsteroid04);
 		Ogre::Entity* _entAsteroid04 = mSceneMgr->createEntity("entAsteroid04", "roca04.mesh");
 		_nodeAsteroid04->attachObject(_entAsteroid04);
@@ -854,6 +1094,7 @@ public:
 		_nodeAsteroid04->setScale(5,5,5);
 
 		Ogre::SceneNode* _nodeAsteroid05 = mSceneMgr->createSceneNode("Asteroid05");
+		obstacles.push_back(_nodeAsteroid05);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeAsteroid05);
 		Ogre::Entity* _entAsteroid05 = mSceneMgr->createEntity("entAsteroid05", "roca03.mesh");
 		_nodeAsteroid05->attachObject(_entAsteroid05);
@@ -861,6 +1102,7 @@ public:
 		_nodeAsteroid05->setScale(2,2,2);
 
 		Ogre::SceneNode* _nodeAsteroid06 = mSceneMgr->createSceneNode("Asteroid06");
+		obstacles.push_back(_nodeAsteroid06);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeAsteroid06);
 		Ogre::Entity* _entAsteroid06 = mSceneMgr->createEntity("entAsteroid06", "roca01.mesh");
 		_nodeAsteroid06->attachObject(_entAsteroid06);
@@ -868,6 +1110,7 @@ public:
 		_nodeAsteroid06->setScale(2,2,2);
 
 		Ogre::SceneNode* _nodeAsteroid07 = mSceneMgr->createSceneNode("Asteroid07");
+		obstacles.push_back(_nodeAsteroid07);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeAsteroid07);
 		Ogre::Entity* _entAsteroid07 = mSceneMgr->createEntity("entAsteroid07", "roca03.mesh");
 		_nodeAsteroid07->attachObject(_entAsteroid07);
@@ -875,6 +1118,7 @@ public:
 		_nodeAsteroid07->setScale(2,2,2);
 
 		Ogre::SceneNode* _nodeAsteroid08 = mSceneMgr->createSceneNode("Asteroid08");
+		obstacles.push_back(_nodeAsteroid08);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeAsteroid08);
 		Ogre::Entity* _entAsteroid08 = mSceneMgr->createEntity("entAsteroid08", "roca02.mesh");
 		_nodeAsteroid08->attachObject(_entAsteroid08);
@@ -882,6 +1126,7 @@ public:
 		_nodeAsteroid08->setScale(1.5,1.5,1.5);
 
 		Ogre::SceneNode* _nodeAsteroid09 = mSceneMgr->createSceneNode("Asteroid09");
+		obstacles.push_back(_nodeAsteroid09);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeAsteroid09);
 		Ogre::Entity* _entAsteroid09 = mSceneMgr->createEntity("entAsteroid09", "roca03.mesh");
 		_nodeAsteroid09->attachObject(_entAsteroid09);
@@ -889,6 +1134,7 @@ public:
 		_nodeAsteroid09->setScale(1,1,1);
 
 		Ogre::SceneNode* _nodeAsteroid10 = mSceneMgr->createSceneNode("Asteroid10");
+		obstacles.push_back(_nodeAsteroid10);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeAsteroid10);
 		Ogre::Entity* _entAsteroid10 = mSceneMgr->createEntity("entAsteroid10", "roca03.mesh");
 		_nodeAsteroid10->attachObject(_entAsteroid10);
@@ -896,6 +1142,7 @@ public:
 		_nodeAsteroid10->setScale(1,1,1);
 
 		Ogre::SceneNode* _nodeAsteroid11 = mSceneMgr->createSceneNode("Asteroid11");
+		obstacles.push_back(_nodeAsteroid11);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeAsteroid11);
 		Ogre::Entity* _entAsteroid11 = mSceneMgr->createEntity("entAsteroid11", "roca03.mesh");
 		_nodeAsteroid11->attachObject(_entAsteroid11);
@@ -903,6 +1150,7 @@ public:
 		_nodeAsteroid11->setScale(7,4,4);
 
 		Ogre::SceneNode* _nodeAsteroid12 = mSceneMgr->createSceneNode("Asteroid12");
+		obstacles.push_back(_nodeAsteroid12);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeAsteroid12);
 		Ogre::Entity* _entAsteroid12 = mSceneMgr->createEntity("entAsteroid12", "roca01.mesh");
 		_nodeAsteroid12->attachObject(_entAsteroid12);
@@ -913,6 +1161,7 @@ public:
 		// Asteroids Final
 
 		Ogre::SceneNode* _nodeAsteroid13 = mSceneMgr->createSceneNode("Asteroid13");
+		obstacles.push_back(_nodeAsteroid13);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeAsteroid13);
 		Ogre::Entity* _entAsteroid13 = mSceneMgr->createEntity("entAsteroid13", "roca01.mesh");
 		_nodeAsteroid13->attachObject(_entAsteroid13);
@@ -921,6 +1170,7 @@ public:
 		_nodeAsteroid13->yaw(Degree(90));
 
 		Ogre::SceneNode* _nodeAsteroid14 = mSceneMgr->createSceneNode("Asteroid14");
+		obstacles.push_back(_nodeAsteroid14);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeAsteroid14);
 		Ogre::Entity* _entAsteroid14 = mSceneMgr->createEntity("entAsteroid14", "roca02.mesh");
 		_nodeAsteroid14->attachObject(_entAsteroid14);
@@ -929,6 +1179,7 @@ public:
 		_nodeAsteroid14->yaw(Degree(90));
 
 		Ogre::SceneNode* _nodeAsteroid15 = mSceneMgr->createSceneNode("Asteroid15");
+		obstacles.push_back(_nodeAsteroid15);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeAsteroid15);
 		Ogre::Entity* _entAsteroid15 = mSceneMgr->createEntity("entAsteroid15", "roca02.mesh");
 		_nodeAsteroid15->attachObject(_entAsteroid15);
@@ -936,6 +1187,7 @@ public:
 		_nodeAsteroid15->setScale(0.5,1,1);
 
 		Ogre::SceneNode* _nodeAsteroid16 = mSceneMgr->createSceneNode("Asteroid16");
+		obstacles.push_back(_nodeAsteroid16);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeAsteroid16);
 		Ogre::Entity* _entAsteroid16 = mSceneMgr->createEntity("entAsteroid16", "roca03.mesh");
 		_nodeAsteroid16->attachObject(_entAsteroid16);
@@ -943,6 +1195,7 @@ public:
 		_nodeAsteroid16->setScale(0.5,1,1);
 
 		Ogre::SceneNode* _nodeAsteroid17 = mSceneMgr->createSceneNode("Asteroid17");
+		obstacles.push_back(_nodeAsteroid17);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeAsteroid17);
 		Ogre::Entity* _entAsteroid17 = mSceneMgr->createEntity("entAsteroid17", "roca04.mesh");
 		_nodeAsteroid17->attachObject(_entAsteroid17);
@@ -951,6 +1204,7 @@ public:
 		_entAsteroid17->setMaterialName("matAsteroid3");
 
 		Ogre::SceneNode* _nodeAsteroid18 = mSceneMgr->createSceneNode("Asteroid18");
+		obstacles.push_back(_nodeAsteroid18);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeAsteroid18);
 		Ogre::Entity* _entAsteroid18 = mSceneMgr->createEntity("entAsteroid18", "roca02.mesh");
 		_nodeAsteroid18->attachObject(_entAsteroid18);
@@ -959,6 +1213,7 @@ public:
 		_nodeAsteroid18->yaw(Degree(70));
 
 		Ogre::SceneNode* _nodeAsteroid19 = mSceneMgr->createSceneNode("Asteroid19");
+		obstacles.push_back(_nodeAsteroid19);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeAsteroid19);
 		Ogre::Entity* _entAsteroid19 = mSceneMgr->createEntity("entAsteroid19", "roca01.mesh");
 		_nodeAsteroid19->attachObject(_entAsteroid19);
@@ -966,6 +1221,7 @@ public:
 		_nodeAsteroid19->setScale(0.5,1,1);
 
 		Ogre::SceneNode* _nodeAsteroid20 = mSceneMgr->createSceneNode("Asteroid20");
+		obstacles.push_back(_nodeAsteroid20);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeAsteroid20);
 		Ogre::Entity* _entAsteroid20 = mSceneMgr->createEntity("entAsteroid20", "roca03.mesh");
 		_nodeAsteroid20->attachObject(_entAsteroid20);
@@ -973,6 +1229,7 @@ public:
 		_nodeAsteroid20->setScale(0.5,1,1);
 
 		Ogre::SceneNode* _nodeAsteroid21 = mSceneMgr->createSceneNode("Asteroid21");
+		obstacles.push_back(_nodeAsteroid21);
 		mSceneMgr->getRootSceneNode()->addChild(_nodeAsteroid21);
 		Ogre::Entity* _entAsteroid21 = mSceneMgr->createEntity("entAsteroid21", "roca04.mesh");
 		_nodeAsteroid21->attachObject(_entAsteroid21);
@@ -1298,6 +1555,39 @@ public:
 		animAsteroid12->setEnabled(true);
 		animAsteroid12->setLoop(true);
 
+		createAsteroidAnimation("AnimAsteroid13", 0, _nodeAsteroid13, 0);
+		createAsteroidAnimation("AnimAsteroid14", 40, _nodeAsteroid14, 1);
+		createAsteroidAnimation("AnimAsteroid15", 80, _nodeAsteroid15, 2);
+		createAsteroidAnimation("AnimAsteroid16", 120, _nodeAsteroid16, 3);
+		createAsteroidAnimation("AnimAsteroid17", 160, _nodeAsteroid17, 4);
+		createAsteroidAnimation("AnimAsteroid18", -40, _nodeAsteroid18, 5);
+		createAsteroidAnimation("AnimAsteroid19", -80, _nodeAsteroid19, 6);
+		createAsteroidAnimation("AnimAsteroid20", -120, _nodeAsteroid20, 7);
+		createAsteroidAnimation("AnimAsteroid21", -160, _nodeAsteroid21, 8);
+
+		createCoin("Coin01", "entCoin01", 0, 0, 100);
+		createCoin("Coin02", "entCoin02", 1, 90, 500);
+		createCoin("Coin03", "entCoin03", 2, 0, 1000);
+		createCoin("Coin04", "entCoin04", 3, 0, 1500);
+		createCoin("Coin05", "entCoin05", 4, 0, 2000);
+		createCoin("Coin06", "entCoin06", 5, 0, 2500);
+		createCoin("Coin07", "entCoin07", 6, 0, 3000);
+		createCoin("Coin08", "entCoin08", 7, 0, 3500);
+		createCoin("Coin09", "entCoin09", 8, 0, 4000);
+		createCoin("Coin10", "entCoin10", 9, 0, 4500);
+		createCoin("Coin11", "entCoin11", 10, 0, 5500);
+		createCoin("Coin12", "entCoin12", 11, 0, 6500);
+		createCoin("Coin13", "entCoin13", 12, 0, 7000);
+		createCoin("Coin14", "entCoin14", 13, 0, 8000);
+		createCoin("Coin15", "entCoin15", 14, 0, 8500);
+		createCoin("Coin16", "entCoin16", 15, 0, 9000);
+		createCoin("Coin17", "entCoin17", 16, 100, 9500);
+		createCoin("Coin18", "entCoin18", 17, 100, 1500);
+		createCoin("Coin19", "entCoin19", 18, -100, 5500);
+		createCoin("Coin20", "entCoin20", 19, 140, 1000);
+
+		memset(isTakenCoin, false, 20);
+
 		//SPACE
 		mSceneMgr->setSkyDome(true, "matSky", 5, 8);
 
@@ -1312,6 +1602,7 @@ public:
 int main (void)
 {
 	Example1 app;
+	std::srand(std::time(NULL));
 	app.go();
 	return 0;
 }
