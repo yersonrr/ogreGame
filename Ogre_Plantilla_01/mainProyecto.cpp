@@ -2,10 +2,11 @@
 #include "math.h"
 
 
-AnimationState * wheelSpinningState[4], *wheelTurningRightState[2], *wheelTurningLeftState[2], *evolutionState;
+AnimationState * wheelSpinningState[4], *wheelTurningRightState[2], *wheelTurningLeftState[2], *transformationState[4];
 char* wheelSpinningName[] = {"wheel1_Spinning", "wheel2_Spinning", "wheel3_Spinning", "wheel4_Spinning"},
 	* wheelTurningRightName[]  = {"wheel1_TurningRight", "wheel2_TurningRight"},
-	* wheelTurningLeftName[]  = {"wheel1_TurningLeft", "wheel2_TurningLeft"};
+	* wheelTurningLeftName[]  = {"wheel1_TurningLeft", "wheel2_TurningLeft"},
+	* transformationName[] = {"transformation1", "transformation2", "transformation3", "transformation4"};
 Ogre::SceneNode* _nodeRueda[4], *_nodeFrontAxis;
 std::vector<Ogre::SceneNode *> obstacles;
 
@@ -15,6 +16,7 @@ class FrameListenerClase : public Ogre::FrameListener{
 private:
 	float time_rotating;
 	int degree;
+	bool transformed;
 	Ogre::SceneNode* _node;
 	Ogre::AnimationState* _anim;
 	OIS::InputManager* _man;
@@ -25,6 +27,7 @@ public:
 	FrameListenerClase(Ogre::SceneNode* node, Ogre::Entity* entOgre01, Ogre::Camera* cam, RenderWindow* win){
 		time_rotating = 0.0;
 		degree = 0;
+		transformed = false;
 
 		//Configuracion para captura de teclado y mouse 
 		size_t windowHnd = 0;
@@ -92,6 +95,19 @@ public:
 		return false;
 	}
 
+	bool collides_transformation_line(Ogre::SceneNode *node) {
+		return node->_getDerivedPosition().z > 6650;
+	}
+
+	void transform() {
+		transformed = true;
+		for (int i=0; i<4; i++) {
+			transformationState[i]->setEnabled(true);
+			transformationState[i]->setLoop(false);
+			transformationState[i]->setTimePosition(0.0);
+		}
+	}
+
 	bool frameStarted(const Ogre::FrameEvent &evt){
 		_key->capture();
 
@@ -124,7 +140,7 @@ public:
 					_nodeFrontAxis->yaw(Degree(-degree));
 					degree = 0;
 				}
-				if (degree > -10) {
+				if (degree > -10 && !transformed) {
 					degree -= 2;
 					_nodeFrontAxis->yaw(Degree(-2));
 				}
@@ -139,7 +155,7 @@ public:
 					_nodeFrontAxis->yaw(Degree(-degree));
 					degree = 0;
 				}
-				if (degree < 10) {
+				if (degree < 10 && !transformed) {
 					degree += 2;
 					_nodeFrontAxis->yaw(Degree(2));
 				}
@@ -162,10 +178,8 @@ public:
 			degree = 0;
 		}
 
-		if(_key->isKeyDown(OIS::KC_Q)) {
-			evolutionState->setEnabled(true);
-			evolutionState->setTimePosition(0.0);
-		}
+		if(_key->isKeyDown(OIS::KC_Q))
+			transform();
 
 		if(_key->isKeyDown(OIS::KC_W))
 			tmov += Ogre::Vector3(0,0,100);
@@ -181,6 +195,10 @@ public:
 			for (int i=2; i<4; i++)
 				wheelSpinningState[i]->addTime(evt.timeSinceLastFrame);
 		}
+		if(transformationState[0]->getEnabled()) {
+			for (int i=0; i<4; i++)
+				transformationState[i]->addTime(evt.timeSinceLastFrame);
+		}
 
 		// car control
 		Ogre::Vector3 initial_position = _node->_getDerivedPosition();
@@ -191,6 +209,8 @@ public:
 			_node->_setDerivedPosition(initial_position);
 			_node->yaw(Ogre::Degree(-trot));
 		}
+		else if (!transformed && collides_transformation_line(_node))
+			transform();
 
 		return true;
 	}
@@ -225,6 +245,32 @@ public:
 		mCamera->setPosition(0,20,-70);
 		mCamera->lookAt(0,20,1000);
 		mCamera->setNearClipDistance(1);
+	}
+
+	void createTransformationAnimation(int wheel_index) {
+		// create animation to transform the car into a spaceship
+		Real duration = 0.5;
+		Animation* animation = mSceneMgr->createAnimation(transformationName[wheel_index], duration);
+		animation->setInterpolationMode(Animation::IM_SPLINE);
+		NodeAnimationTrack* track = animation->createNodeTrack(0, _nodeRueda[wheel_index]);
+
+		Ogre::Vector3 wheel_rotation_vector(0.0, 0.0, 1.0);
+
+		// add keyframes
+		TransformKeyFrame* key;
+
+		key = track->createNodeKeyFrame(0.0f);
+		key->setTranslate(_nodeRueda[wheel_index]->getPosition());
+		key->setRotation(Quaternion(Degree(0), wheel_rotation_vector));
+
+		key = track->createNodeKeyFrame(duration);
+		key->setTranslate(_nodeRueda[wheel_index]->getPosition());
+		key->setRotation(Quaternion(Degree((wheel_index==0 || wheel_index==2) ? 90 : -90), wheel_rotation_vector));
+
+		if (wheel_index == 1 || wheel_index == 3)
+			key->setTranslate(_nodeRueda[wheel_index]->getPosition() - Ogre::Vector3(2.0, 2.0, 0.0));
+
+		transformationState[wheel_index] = mSceneMgr->createAnimationState(transformationName[wheel_index]);
 	}
 
 	void createWheelSpinningAnimation(int wheel_index) {
@@ -262,18 +308,14 @@ public:
 
 		// add keyframes
 		TransformKeyFrame* key;
-		Ogre::Vector3 pos(0,0,0);//_nodeRueda[wheel_index]->getPosition();
 
 		key = track->createNodeKeyFrame(0.0f);
-		//key->setTranslate(_nodeRueda[wheel_index]->getPosition());
 		key->setRotation(Quaternion(Degree(0), wheel_rotation_vector));
 
 		key = track->createNodeKeyFrame(step);
-		//key->setTranslate(_nodeRueda[wheel_index]->getPosition());
 		key->setRotation(Quaternion(Degree(-30), wheel_rotation_vector));
 
 		key = track->createNodeKeyFrame(duration);
-		//key->setTranslate(_nodeRueda[wheel_index]->getPosition());
 		key->setRotation(Quaternion(Degree(0), wheel_rotation_vector));
 
 		wheelTurningRightState[wheel_index] = mSceneMgr->createAnimationState(wheelTurningRightName[wheel_index]);
@@ -293,15 +335,12 @@ public:
 		TransformKeyFrame* key;
 
 		key = track->createNodeKeyFrame(0.0f);
-		//key->setTranslate(_nodeRueda[wheel_index]->getPosition());
 		key->setRotation(Quaternion(Degree(0), wheel_rotation_vector));
 
 		key = track->createNodeKeyFrame(step);
-		//key->setTranslate(_nodeRueda[wheel_index]->getPosition());
 		key->setRotation(Quaternion(Degree(30), wheel_rotation_vector));
 
 		key = track->createNodeKeyFrame(duration);
-		//key->setTranslate(_nodeRueda[wheel_index]->getPosition());
 		key->setRotation(Quaternion(Degree(0), wheel_rotation_vector));
 
 		wheelTurningLeftState[wheel_index] = mSceneMgr->createAnimationState(wheelTurningLeftName[wheel_index]);
@@ -310,7 +349,7 @@ public:
 	void createScene()
 	{
 		mSceneMgr->setAmbientLight(Ogre::ColourValue(0.0, 0.0, 0.0));
-		mSceneMgr->setShadowTechnique(Ogre::SHADOWTYPE_STENCIL_MODULATIVE);
+		//mSceneMgr->setShadowTechnique(Ogre::SHADOWTYPE_STENCIL_MODULATIVE);
 		
 		Ogre::Light* LuzPuntual01 = mSceneMgr->createLight("Luz01");
 		LuzPuntual01->setType(Ogre::Light::LT_DIRECTIONAL);
@@ -1152,8 +1191,8 @@ public:
 
 		// create wheels animations
 		for (int i=0; i<4; i++) {
-			//wheels_positions[i] = Ogre::Vector3(_nodeRueda[i]->_getDerivedPosition());
 			createWheelSpinningAnimation(i);
+			createTransformationAnimation(i);
 		}
 		for (int i=0; i<2; i++) {
 			createWheelTurningRightAnimation(i);
