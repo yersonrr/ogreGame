@@ -2,12 +2,12 @@
 #include "math.h"
 
 
-AnimationState * wheelSpinningState[4], *wheelTurningRightState[2], *wheelTurningLeftState[2], *transformationState[4];
+AnimationState * wheelSpinningState[4], *wheelTurningRightState[2], *wheelTurningLeftState[2], *transformationState[5];
 char* wheelSpinningName[] = {"wheel1_Spinning", "wheel2_Spinning", "wheel3_Spinning", "wheel4_Spinning"},
 	* wheelTurningRightName[]  = {"wheel1_TurningRight", "wheel2_TurningRight"},
 	* wheelTurningLeftName[]  = {"wheel1_TurningLeft", "wheel2_TurningLeft"},
-	* transformationName[] = {"transformation1", "transformation2", "transformation3", "transformation4"};
-Ogre::SceneNode* _nodeRueda[4], *_nodeFrontAxis;
+	* transformationName[] = {"transformation1", "transformation2", "transformation3", "transformation4", "transformation5"};
+Ogre::SceneNode* _nodeRueda[4], *_nodeFrontAxis, *_nodeAlas;
 std::vector<Ogre::SceneNode *> obstacles;
 
 
@@ -101,7 +101,7 @@ public:
 
 	void transform() {
 		transformed = true;
-		for (int i=0; i<4; i++) {
+		for (int i=0; i<5; i++) {
 			transformationState[i]->setEnabled(true);
 			transformationState[i]->setLoop(false);
 			transformationState[i]->setTimePosition(0.0);
@@ -196,7 +196,7 @@ public:
 				wheelSpinningState[i]->addTime(evt.timeSinceLastFrame);
 		}
 		if(transformationState[0]->getEnabled()) {
-			for (int i=0; i<4; i++)
+			for (int i=0; i<5; i++)
 				transformationState[i]->addTime(evt.timeSinceLastFrame);
 		}
 
@@ -245,6 +245,27 @@ public:
 		mCamera->setPosition(0,20,-70);
 		mCamera->lookAt(0,20,1000);
 		mCamera->setNearClipDistance(1);
+	}
+
+	void createTransformationCubeAnimation() {
+		// create animation to grow wings from within the car when transforming into a spaceship
+		Real duration = 1.0;
+		Animation* animation = mSceneMgr->createAnimation(transformationName[4], duration);
+		animation->setInterpolationMode(Animation::IM_SPLINE);
+		NodeAnimationTrack* track = animation->createNodeTrack(0, _nodeAlas);
+
+		// add keyframes
+		TransformKeyFrame* key;
+
+		key = track->createNodeKeyFrame(0.0f);
+		key->setTranslate(_nodeAlas->getPosition());
+		key->setScale(Ogre::Vector3(0.1, 0.1, 0.1));
+
+		key = track->createNodeKeyFrame(duration);
+		key->setTranslate(_nodeAlas->getPosition() + Ogre::Vector3(0,4,0));
+		key->setScale(Ogre::Vector3(3.0, 0.2, 0.3));
+
+		transformationState[4] = mSceneMgr->createAnimationState(transformationName[4]);
 	}
 
 	void createTransformationAnimation(int wheel_index) {
@@ -346,35 +367,78 @@ public:
 		wheelTurningLeftState[wheel_index] = mSceneMgr->createAnimationState(wheelTurningLeftName[wheel_index]);
 	}
 
+	void createLight(String name, int x, int y, int z, Vector3 v){
+		Ogre::Light* LuzPuntual = mSceneMgr->createLight(name);
+		LuzPuntual->setType(Ogre::Light::LT_POINT);
+		LuzPuntual->setDiffuseColour(1.0,1.0,1.0);
+		LuzPuntual->setSpecularColour(1,1,1);
+		LuzPuntual->setPosition(x,y,z);
+		LuzPuntual->setDirection(v);
+		LuzPuntual->setSpotlightRange(Degree(45), Degree(90));
+		int range = 100;
+		LuzPuntual->setAttenuation(range, 1.0, 4.5/range, 75/(range*range));
+		//LuzPuntual->setAttenuation(range, 1.0, 1, 0);
+	}
+
 	void createScene()
 	{
-		mSceneMgr->setAmbientLight(Ogre::ColourValue(0.0, 0.0, 0.0));
-		//mSceneMgr->setShadowTechnique(Ogre::SHADOWTYPE_STENCIL_MODULATIVE);
-		
-		Ogre::Light* LuzPuntual01 = mSceneMgr->createLight("Luz01");
+		mSceneMgr->setAmbientLight(Ogre::ColourValue(0.8, 0.8, 0.8));
+		mSceneMgr->setShadowTechnique(Ogre::SHADOWTYPE_STENCIL_MODULATIVE);
+
+		Ogre::Light* LuzPuntual01 = mSceneMgr->createLight("LuzDirectional01");
 		LuzPuntual01->setType(Ogre::Light::LT_DIRECTIONAL);
 		LuzPuntual01->setDiffuseColour(1.0,1.0,1.0);
-		LuzPuntual01->setDirection(Ogre::Vector3( 1, -1, -1 ));
-		
-		Ogre::Light* LuzPuntual03 = mSceneMgr->createLight("Luz03");
-		LuzPuntual03->setType(Ogre::Light::LT_DIRECTIONAL);
-		LuzPuntual03->setDiffuseColour(1.0,1.0,1.0);
-		LuzPuntual03->setDirection(Ogre::Vector3( -1, -1, -1 ));
+		LuzPuntual01->setDirection(Ogre::Vector3(1, -1, -1));
 
-		// Carro
+		Ogre::Light* LuzPuntual02 = mSceneMgr->createLight("LuzDirectional02");
+		LuzPuntual02->setType(Ogre::Light::LT_DIRECTIONAL);
+		LuzPuntual02->setDiffuseColour(1.0,1.0,1.0);
+		LuzPuntual02->setDirection(Ogre::Vector3(-1, -1, -1));
+
+		Vector3 v = Vector3(0, -1, 1);
+		int z = 2900;
+		int x = 0;
+		char *str = (char *) malloc(10);
+		for(int i = 0; i < 2; i++){
+			sprintf(str, "Luz%d", i);
+			createLight(str, x, 5, z, v);
+			z += 500;
+		}
+
+		// Carro		
 		_nodeCarro = mSceneMgr->createSceneNode("Carro");
 		mSceneMgr->getRootSceneNode()->addChild(_nodeCarro);
+
+		Ogre::Light* LuzPuntualCarro = mSceneMgr->createLight("LuzCarro");
+		LuzPuntualCarro->setType(Ogre::Light::LT_SPOTLIGHT);
+		LuzPuntualCarro->setDiffuseColour(1.0,1.0,1.0);
+		LuzPuntualCarro->setDirection(v);
+		LuzPuntualCarro->setSpotlightRange(Degree(360), Degree(360));
+		_nodeCarro->attachObject(LuzPuntualCarro);
+		LuzPuntualCarro->setPosition(0, 20.0, -20.0);
 
 		//Chasis
 		_nodeChasis01 = mSceneMgr->createSceneNode("Chasis01");
 		_nodeChasis01->attachObject(mCamera);
 		_nodeCarro->addChild(_nodeChasis01);
-		
+
 		_entChasis01 = mSceneMgr->createEntity("entChasis01", "chasisCarro.mesh");
 		_entChasis01->setMaterialName("shCarro01");
 		_nodeChasis01->attachObject(_entChasis01);
+
+		// Front axis
 		_nodeFrontAxis = mSceneMgr->createSceneNode("FrontAxis");
 		_nodeChasis01->addChild(_nodeFrontAxis);
+
+		// Alas
+		Ogre::Entity* _entAlas = mSceneMgr->createEntity("entAlas", "cubo02.mesh");
+		_entAlas->setMaterialName("shCarro01");
+		_nodeAlas = mSceneMgr->createSceneNode("Alas");
+		_nodeAlas->attachObject(_entAlas);
+		_nodeAlas->scale(0.1, 0.1, 0.1);
+		_nodeAlas->roll(Degree(90));
+		_nodeCarro->addChild(_nodeAlas);
+
 		//Ruedas
 		//Rueda 1
 		_nodeRueda[2] = mSceneMgr->createSceneNode("Rueda01");
@@ -1198,6 +1262,7 @@ public:
 			createWheelTurningRightAnimation(i);
 			createWheelTurningLeftAnimation(i);
 		}
+		createTransformationCubeAnimation();
 	}
 };
 
