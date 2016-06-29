@@ -6,7 +6,16 @@ char* wheelName[] = {"wheel1_anim", "wheel2_anim", "wheel3_anim", "wheel4_anim"}
 Ogre::SceneNode* _nodeRueda[4];
 bool is_accelerating = false;
 float time_accelerating = 0.0f;
-
+Ogre::AnimationState* animSphere;
+Ogre::AnimationState* animSphere2;
+Ogre::AnimationState* animAsteroid;
+Ogre::AnimationState* animAsteroid2;
+Ogre::AnimationState* animAsteroid3;
+Ogre::AnimationState* animAsteroid4;
+Ogre::AnimationState* animAsteroid9;
+Ogre::AnimationState* animAsteroid10;
+Ogre::AnimationState* animAsteroid11;
+Ogre::AnimationState* animAsteroid12;
 
 class FrameListenerClase : public Ogre::FrameListener{
 
@@ -111,6 +120,19 @@ public:
 		_node->yaw(Ogre::Degree(trot));
 		_node->translate(_node->getOrientation() * tmov * evt.timeSinceLastFrame * movSpeed);
 
+		//Sphere Animation
+		animSphere->addTime(evt.timeSinceLastFrame);
+		animSphere2->addTime(evt.timeSinceLastFrame);
+
+		// Asteroid Animation
+		animAsteroid->addTime(evt.timeSinceLastFrame);
+		animAsteroid2->addTime(evt.timeSinceLastFrame);
+		animAsteroid3->addTime(evt.timeSinceLastFrame);
+		animAsteroid4->addTime(evt.timeSinceLastFrame);
+		animAsteroid9->addTime(evt.timeSinceLastFrame);
+		animAsteroid10->addTime(evt.timeSinceLastFrame);
+		animAsteroid11->addTime(evt.timeSinceLastFrame);
+		animAsteroid12->addTime(evt.timeSinceLastFrame);
 		return true;
 	}
 };
@@ -372,7 +394,7 @@ public:
 		Ogre::Entity* _entArco1 = mSceneMgr->createEntity("entArco1", "torus02.mesh");
 		_nodeArco1->attachObject(_entArco1);
 		_nodeArco1->translate(0,5,900);
-		_nodeArco1->setScale(15,5,15);
+		_nodeArco1->setScale(30,5,30);
 		_nodeArco1->pitch(Degree(90));
 		_entArco1->setMaterialName("matArc1");
 
@@ -381,7 +403,7 @@ public:
 		Ogre::Entity* _entArco2 = mSceneMgr->createEntity("entArco2", "torus02.mesh");
 		_nodeArco2->attachObject(_entArco2);
 		_nodeArco2->translate(0,5,900);
-		_nodeArco2->setScale(20,10,20);
+		_nodeArco2->setScale(25,10,25);
 		_nodeArco2->pitch(Degree(90));
 		_entArco2->setMaterialName("matArc2");
 
@@ -392,7 +414,7 @@ public:
 		Ogre::Entity* _entArco3 = mSceneMgr->createEntity("entArco3", "torus02.mesh");
 		_nodeArco3->attachObject(_entArco3);
 		_nodeArco3->translate(0,5,1320);
-		_nodeArco3->setScale(15,5,15);
+		_nodeArco3->setScale(30,5,30);
 		_nodeArco3->pitch(Degree(90));
 		_entArco3->setMaterialName("matArc2");
 
@@ -401,7 +423,7 @@ public:
 		Ogre::Entity* _entArco4 = mSceneMgr->createEntity("entArco4", "torus02.mesh");
 		_nodeArco4->attachObject(_entArco4);
 		_nodeArco4->translate(0,5,1320);
-		_nodeArco4->setScale(20,10,20);
+		_nodeArco4->setScale(25,10,25);
 		_nodeArco4->pitch(Degree(90));
 		_entArco4->setMaterialName("matArc1");
 
@@ -564,7 +586,7 @@ public:
 		Ogre::Entity* _entArco5 = mSceneMgr->createEntity("entArco5", "torus02.mesh");
 		_nodeArco5->attachObject(_entArco5);
 		_nodeArco5->translate(0,5,2350);
-		_nodeArco5->setScale(15,5,15);
+		_nodeArco5->setScale(30,5,30);
 		_nodeArco5->pitch(Degree(90));
 		_entArco5->setMaterialName("matArc3");
 
@@ -573,7 +595,7 @@ public:
 		Ogre::Entity* _entArco6 = mSceneMgr->createEntity("entArco6", "torus02.mesh");
 		_nodeArco6->attachObject(_entArco6);
 		_nodeArco6->translate(0,5,2350);
-		_nodeArco6->setScale(20,10,20);
+		_nodeArco6->setScale(25,10,25);
 		_nodeArco6->pitch(Degree(90));
 		_entArco6->setMaterialName("matArc2");
 
@@ -583,7 +605,7 @@ public:
 		Ogre::Entity* _entArco7 = mSceneMgr->createEntity("entArco7", "torus02.mesh");
 		_nodeArco7->attachObject(_entArco7);
 		_nodeArco7->translate(0,5,5500);
-		_nodeArco7->setScale(15,5,15);
+		_nodeArco7->setScale(30,5,30);
 		_nodeArco7->pitch(Degree(90));
 		_entArco7->setMaterialName("matArc2");
 
@@ -592,7 +614,7 @@ public:
 		Ogre::Entity* _entArco8 = mSceneMgr->createEntity("entArco8", "torus02.mesh");
 		_nodeArco8->attachObject(_entArco8);
 		_nodeArco8->translate(0,5,5500);
-		_nodeArco8->setScale(20,10,20);
+		_nodeArco8->setScale(25,10,25);
 		_nodeArco8->pitch(Degree(90));
 		_entArco8->setMaterialName("matArc3");
 
@@ -731,12 +753,76 @@ public:
 		_nodeObstaculo47->translate(-160,5,6300);
 		_nodeObstaculo47->setScale(0.3,0.3,0.3);
 
+		// Animation Sphere
+		float durationAnim = 4;
+		Ogre::Animation* animationSphere01 = mSceneMgr->createAnimation("AnimSphere01",durationAnim);
+		animationSphere01->setInterpolationMode(Animation::IM_SPLINE);
+		
+		Ogre::NodeAnimationTrack* Sphere01track = animationSphere01->createNodeTrack(0, _nodeObstaculo47);
+		Ogre::TransformKeyFrame* keySphere;
+		
+		keySphere = Sphere01track->createNodeKeyFrame(0.0);
+		keySphere->setTranslate(Vector3(-160, 5, 6300));
+		keySphere->setScale(Vector3(0.3,0.3,0.3));
+
+		keySphere = Sphere01track->createNodeKeyFrame(1.0);
+		keySphere->setTranslate(Vector3(0, 5, 6300));
+		keySphere->setScale(Vector3(0.3,0.3,0.3));
+
+		keySphere = Sphere01track->createNodeKeyFrame(2.0);
+		keySphere->setTranslate(Vector3(160, 5, 6300));
+		keySphere->setScale(Vector3(0.3,0.3,0.3));
+
+		keySphere = Sphere01track->createNodeKeyFrame(3.0);
+		keySphere->setTranslate(Vector3(0, 5, 6300));
+		keySphere->setScale(Vector3(0.3,0.3,0.3));
+
+		keySphere = Sphere01track->createNodeKeyFrame(4.0);
+		keySphere->setTranslate(Vector3(-160, 5, 6300));
+		keySphere->setScale(Vector3(0.3,0.3,0.3));
+
+		animSphere = mSceneMgr->createAnimationState("AnimSphere01");
+		animSphere->setEnabled(true);
+		animSphere->setLoop(true);
+
 		Ogre::SceneNode* _nodeObstaculo48 = mSceneMgr->createSceneNode("Obstaculo48");
 		mSceneMgr->getRootSceneNode()->addChild(_nodeObstaculo48);
 		Ogre::Entity* _entObstaculo48 = mSceneMgr->createEntity("entObstaculo48", "sphere.mesh");
 		_nodeObstaculo48->attachObject(_entObstaculo48);
 		_nodeObstaculo48->translate(160,5,6400);
 		_nodeObstaculo48->setScale(0.3,0.3,0.3);
+
+		// Animation Sphere 2
+		Ogre::Animation* animationSphere02 = mSceneMgr->createAnimation("AnimSphere02",durationAnim);
+		animationSphere02->setInterpolationMode(Animation::IM_SPLINE);
+		
+		Ogre::NodeAnimationTrack* Sphere02track = animationSphere02->createNodeTrack(0, _nodeObstaculo48);
+		Ogre::TransformKeyFrame* keySphere2;
+		
+		keySphere2 = Sphere02track->createNodeKeyFrame(0.0);
+		keySphere2->setTranslate(Vector3(160, 5, 6400));
+		keySphere2->setScale(Vector3(0.3,0.3,0.3));
+
+		keySphere2 = Sphere02track->createNodeKeyFrame(1.0);
+		keySphere2->setTranslate(Vector3(0, 5, 6400));
+		keySphere2->setScale(Vector3(0.3,0.3,0.3));
+
+		keySphere2 = Sphere02track->createNodeKeyFrame(2.0);
+		keySphere2->setTranslate(Vector3(-160, 5, 6400));
+		keySphere2->setScale(Vector3(0.3,0.3,0.3));
+
+		keySphere2 = Sphere02track->createNodeKeyFrame(3.0);
+		keySphere2->setTranslate(Vector3(0, 5, 6400));
+		keySphere2->setScale(Vector3(0.3,0.3,0.3));
+
+		keySphere2 = Sphere02track->createNodeKeyFrame(4.0);
+		keySphere2->setTranslate(Vector3(160, 5, 6400));
+		keySphere2->setScale(Vector3(0.3,0.3,0.3));
+
+		animSphere2 = mSceneMgr->createAnimationState("AnimSphere02");
+		animSphere2->setEnabled(true);
+		animSphere2->setLoop(true);
+
 
 		// Asteroides
 		Ogre::SceneNode* _nodeAsteroid01 = mSceneMgr->createSceneNode("Asteroid01");
@@ -813,14 +899,14 @@ public:
 		mSceneMgr->getRootSceneNode()->addChild(_nodeAsteroid11);
 		Ogre::Entity* _entAsteroid11 = mSceneMgr->createEntity("entAsteroid11", "roca03.mesh");
 		_nodeAsteroid11->attachObject(_entAsteroid11);
-		_nodeAsteroid11->translate(90,300,8000);
+		_nodeAsteroid11->translate(90,1000,8000);
 		_nodeAsteroid11->setScale(7,4,4);
 
 		Ogre::SceneNode* _nodeAsteroid12 = mSceneMgr->createSceneNode("Asteroid12");
 		mSceneMgr->getRootSceneNode()->addChild(_nodeAsteroid12);
 		Ogre::Entity* _entAsteroid12 = mSceneMgr->createEntity("entAsteroid12", "roca01.mesh");
 		_nodeAsteroid12->attachObject(_entAsteroid12);
-		_nodeAsteroid12->translate(-90,300,8000);
+		_nodeAsteroid12->translate(-90,1000,8000);
 		_nodeAsteroid12->setScale(6,4,4);
 		_nodeAsteroid12->yaw(Degree(90));
 
@@ -862,6 +948,7 @@ public:
 		_nodeAsteroid17->attachObject(_entAsteroid17);
 		_nodeAsteroid17->translate(160,8,10000);
 		_nodeAsteroid17->setScale(0.5,1,1);
+		_entAsteroid17->setMaterialName("matAsteroid3");
 
 		Ogre::SceneNode* _nodeAsteroid18 = mSceneMgr->createSceneNode("Asteroid18");
 		mSceneMgr->getRootSceneNode()->addChild(_nodeAsteroid18);
@@ -891,6 +978,7 @@ public:
 		_nodeAsteroid21->attachObject(_entAsteroid21);
 		_nodeAsteroid21->translate(-160,8,10000);
 		_nodeAsteroid21->setScale(0.5,1,1);
+		_entAsteroid21->setMaterialName("matAsteroid3");
 
 		// Material
 		_entObstaculo->setMaterialName("matPiso01");
@@ -939,11 +1027,276 @@ public:
 		_entObstaculo44->setMaterialName("matWall");
 		_entObstaculo45->setMaterialName("matWall");
 		_entObstaculo46->setMaterialName("matWall");
+
 		_entObstaculo47->setMaterialName("matSphere");
 		_entObstaculo48->setMaterialName("matSphere");
+
+		_entAsteroid01->setMaterialName("matAsteroid");
+		_entAsteroid02->setMaterialName("matAsteroid2");
+		_entAsteroid03->setMaterialName("matAsteroid3");
+		_entAsteroid04->setMaterialName("matAsteroid3");
+		_entAsteroid05->setMaterialName("matAsteroid2");
+		_entAsteroid06->setMaterialName("matAsteroid");
+		_entAsteroid07->setMaterialName("matAsteroid2");
+		_entAsteroid08->setMaterialName("matAsteroid");
+		_entAsteroid09->setMaterialName("matAsteroid2");
+		_entAsteroid10->setMaterialName("matAsteroid");
+		_entAsteroid11->setMaterialName("matAsteroid3");
+		_entAsteroid12->setMaterialName("matAsteroid3");
+		_entAsteroid13->setMaterialName("matAsteroid");
+		_entAsteroid14->setMaterialName("matAsteroid2");
+		_entAsteroid15->setMaterialName("matAsteroid");
+		_entAsteroid16->setMaterialName("matAsteroid2");
+		_entAsteroid18->setMaterialName("matAsteroid");
+		_entAsteroid19->setMaterialName("matAsteroid3");
+		_entAsteroid20->setMaterialName("matAsteroid2");
+
+		//Lineal Animated
+
+		float duration = 4;
+		Ogre::Animation* animationAsteroid01 = mSceneMgr->createAnimation("AnimAsteroid01",duration);
+		animationAsteroid01->setInterpolationMode(Animation::IM_SPLINE);
 		
-		//TODO 5, 6, 7, 8 Lineal Animated
-		//TODO 9, 10 Diagonal Animated
+		Ogre::NodeAnimationTrack* Asteroid01track = animationAsteroid01->createNodeTrack(0, _nodeAsteroid05);
+		Ogre::TransformKeyFrame* key;
+		
+		key = Asteroid01track->createNodeKeyFrame(0.0);
+		key->setTranslate(Vector3(160, 5, 7100));
+		key->setScale(Vector3(2, 2, 2));
+
+		key = Asteroid01track->createNodeKeyFrame(1.0);
+		key->setTranslate(Vector3(0, 5, 7100));
+		key->setScale(Vector3(2, 2, 2));
+
+		key = Asteroid01track->createNodeKeyFrame(2.0);
+		key->setTranslate(Vector3(-160, 5, 7100));
+		key->setScale(Vector3(2, 2, 2));
+
+		key = Asteroid01track->createNodeKeyFrame(3.0);
+		key->setTranslate(Vector3(0, 5, 7100));
+		key->setScale(Vector3(2, 2, 2));
+
+		key = Asteroid01track->createNodeKeyFrame(4.0);
+		key->setTranslate(Vector3(160, 5, 7100));
+		key->setScale(Vector3(2, 2, 2));
+
+		animAsteroid = mSceneMgr->createAnimationState("AnimAsteroid01");
+		animAsteroid->setEnabled(true);
+		animAsteroid->setLoop(true);
+
+		Ogre::Animation* animationAsteroid02 = mSceneMgr->createAnimation("AnimAsteroid02",duration);
+		animationAsteroid02->setInterpolationMode(Animation::IM_SPLINE);
+		
+		Ogre::NodeAnimationTrack* Asteroid02track = animationAsteroid02->createNodeTrack(0, _nodeAsteroid06);
+		Ogre::TransformKeyFrame* key2;
+		
+		key2 = Asteroid02track->createNodeKeyFrame(0.0);
+		key2->setTranslate(Vector3(-160, 5, 7200));
+		key2->setScale(Vector3(2, 2, 2));
+
+		key2 = Asteroid02track->createNodeKeyFrame(1.0);
+		key2->setTranslate(Vector3(0, 5, 7200));
+		key2->setScale(Vector3(2, 2, 2));
+
+		key2 = Asteroid02track->createNodeKeyFrame(2.0);
+		key2->setTranslate(Vector3(160, 5, 7200));
+		key2->setScale(Vector3(2, 2, 2));
+
+		key2 = Asteroid02track->createNodeKeyFrame(3.0);
+		key2->setTranslate(Vector3(0, 5, 7200));
+		key2->setScale(Vector3(2, 2, 2));
+
+		key2 = Asteroid02track->createNodeKeyFrame(4.0);
+		key2->setTranslate(Vector3(-160, 5, 7200));
+		key2->setScale(Vector3(2, 2, 2));
+
+		animAsteroid2 = mSceneMgr->createAnimationState("AnimAsteroid02");
+		animAsteroid2->setEnabled(true);
+		animAsteroid2->setLoop(true);
+		
+		Ogre::Animation* animationAsteroid03 = mSceneMgr->createAnimation("AnimAsteroid03",duration);
+		animationAsteroid03->setInterpolationMode(Animation::IM_SPLINE);
+		
+		Ogre::NodeAnimationTrack* Asteroid03track = animationAsteroid03->createNodeTrack(0, _nodeAsteroid07);
+		Ogre::TransformKeyFrame* key3;
+		
+		key3 = Asteroid03track->createNodeKeyFrame(0.0);
+		key3->setTranslate(Vector3(160, 5, 7300));
+		key3->setScale(Vector3(2, 2, 2));
+
+		key3 = Asteroid03track->createNodeKeyFrame(1.0);
+		key3->setTranslate(Vector3(0, 5, 7300));
+		key3->setScale(Vector3(2, 2, 2));
+
+		key3 = Asteroid03track->createNodeKeyFrame(2.0);
+		key3->setTranslate(Vector3(-160, 5, 7300));
+		key3->setScale(Vector3(2, 2, 2));
+
+		key3 = Asteroid03track->createNodeKeyFrame(3.0);
+		key3->setTranslate(Vector3(0, 5, 7300));
+		key3->setScale(Vector3(2, 2, 2));
+
+		key3 = Asteroid03track->createNodeKeyFrame(4.0);
+		key3->setTranslate(Vector3(160, 5, 7300));
+		key3->setScale(Vector3(2, 2, 2));
+
+		animAsteroid3 = mSceneMgr->createAnimationState("AnimAsteroid03");
+		animAsteroid3->setEnabled(true);
+		animAsteroid3->setLoop(true);
+
+		Ogre::Animation* animationAsteroid04 = mSceneMgr->createAnimation("AnimAsteroid04",duration);
+		animationAsteroid04->setInterpolationMode(Animation::IM_SPLINE);
+		
+		Ogre::NodeAnimationTrack* Asteroid04track = animationAsteroid04->createNodeTrack(0, _nodeAsteroid08);
+		Ogre::TransformKeyFrame* key4;
+		
+		key4 = Asteroid04track->createNodeKeyFrame(0.0);
+		key4->setTranslate(Vector3(-160, 5, 7400));
+		key4->setScale(Vector3(2, 2, 2));
+
+		key4 = Asteroid04track->createNodeKeyFrame(1.0);
+		key4->setTranslate(Vector3(0, 5, 7400));
+		key4->setScale(Vector3(2, 2, 2));
+
+		key4 = Asteroid04track->createNodeKeyFrame(2.0);
+		key4->setTranslate(Vector3(160, 5, 7400));
+		key4->setScale(Vector3(2, 2, 2));
+
+		key4 = Asteroid04track->createNodeKeyFrame(3.0);
+		key4->setTranslate(Vector3(0, 5, 7400));
+		key4->setScale(Vector3(2, 2, 2));
+
+		key4 = Asteroid04track->createNodeKeyFrame(4.0);
+		key4->setTranslate(Vector3(-160, 5, 7400));
+		key4->setScale(Vector3(2, 2, 2));
+
+		animAsteroid4 = mSceneMgr->createAnimationState("AnimAsteroid04");
+		animAsteroid4->setEnabled(true);
+		animAsteroid4->setLoop(true);
+
+		// 9 - 10 Diagonal Animated
+		duration = 6;
+		Ogre::Animation* animationAsteroid09 = mSceneMgr->createAnimation("AnimAsteroid09",duration);
+		animationAsteroid09->setInterpolationMode(Animation::IM_SPLINE);
+		
+		Ogre::NodeAnimationTrack* Asteroid09track = animationAsteroid09->createNodeTrack(0, _nodeAsteroid09);
+		Ogre::TransformKeyFrame* key9;
+		
+		key9 = Asteroid09track->createNodeKeyFrame(0.0);
+		key9->setTranslate(Vector3(-180, 5, 7700));
+		key9->setScale(Vector3(2, 2, 2));
+
+		key9 = Asteroid09track->createNodeKeyFrame(2.0);
+		key9->setTranslate(Vector3(0, 5, 7550));
+		key9->setScale(Vector3(2, 2, 2));
+
+		key9 = Asteroid09track->createNodeKeyFrame(3.0);
+		key9->setTranslate(Vector3(180, 5, 7400));
+		key9->setScale(Vector3(2, 2, 2));
+
+		key9 = Asteroid09track->createNodeKeyFrame(4.0);
+		key9->setTranslate(Vector3(0, 5, 7550));
+		key9->setScale(Vector3(2, 2, 2));
+
+		key9 = Asteroid09track->createNodeKeyFrame(6.0);
+		key9->setTranslate(Vector3(-180, 5, 7700));
+		key9->setScale(Vector3(2, 2, 2));
+
+		animAsteroid9 = mSceneMgr->createAnimationState("AnimAsteroid09");
+		animAsteroid9->setEnabled(true);
+		animAsteroid9->setLoop(true);
+
+		Ogre::Animation* animationAsteroid10 = mSceneMgr->createAnimation("AnimAsteroid10",duration);
+		animationAsteroid10->setInterpolationMode(Animation::IM_SPLINE);
+		
+		Ogre::NodeAnimationTrack* Asteroid10track = animationAsteroid10->createNodeTrack(0, _nodeAsteroid10);
+		Ogre::TransformKeyFrame* key10;
+		
+		key10 = Asteroid10track->createNodeKeyFrame(0.0);
+		key10->setTranslate(Vector3(180, 5, 7700));
+		key10->setScale(Vector3(2, 2, 2));
+
+		key10 = Asteroid10track->createNodeKeyFrame(2.0);
+		key10->setTranslate(Vector3(0, 5, 7550));
+		key10->setScale(Vector3(2, 2, 2));
+
+		key10 = Asteroid10track->createNodeKeyFrame(3.0);
+		key10->setTranslate(Vector3(-180, 5, 7400));
+		key10->setScale(Vector3(2, 2, 2));
+
+		key10 = Asteroid10track->createNodeKeyFrame(4.0);
+		key10->setTranslate(Vector3(0, 5, 7550));
+		key10->setScale(Vector3(2, 2, 2));
+
+		key10 = Asteroid10track->createNodeKeyFrame(6.0);
+		key10->setTranslate(Vector3(180, 5, 7700));
+		key10->setScale(Vector3(2, 2, 2));
+
+		animAsteroid10 = mSceneMgr->createAnimationState("AnimAsteroid10");
+		animAsteroid10->setEnabled(true);
+		animAsteroid10->setLoop(true);
+
+		// 11 - 12 
+		duration = 4;
+		Ogre::Animation* animationAsteroid11 = mSceneMgr->createAnimation("AnimAsteroid11",duration);
+		animationAsteroid11->setInterpolationMode(Animation::IM_SPLINE);
+		
+		Ogre::NodeAnimationTrack* Asteroid11track = animationAsteroid11->createNodeTrack(0, _nodeAsteroid11);
+		Ogre::TransformKeyFrame* key11;
+		
+		key11 = Asteroid11track->createNodeKeyFrame(0.0);
+		key11->setTranslate(Vector3(90, 1000, 8000));
+		key11->setScale(Vector3(7, 4, 4));
+
+		key11 = Asteroid11track->createNodeKeyFrame(1.0);
+		key11->setTranslate(Vector3(90, 500, 8000));
+		key11->setScale(Vector3(7, 4, 4));
+
+		key11 = Asteroid11track->createNodeKeyFrame(2.0);
+		key11->setTranslate(Vector3(90, 0, 8000));
+		key11->setScale(Vector3(7, 4, 4));
+
+		key11 = Asteroid11track->createNodeKeyFrame(3.0);
+		key11->setTranslate(Vector3(90, -500, 8000));
+		key11->setScale(Vector3(7, 4, 4));
+
+		key11 = Asteroid11track->createNodeKeyFrame(4.0);
+		key11->setTranslate(Vector3(90, -1000, 8000));
+		key11->setScale(Vector3(7, 4, 4));
+
+		animAsteroid11 = mSceneMgr->createAnimationState("AnimAsteroid11");
+		animAsteroid11->setEnabled(true);
+		animAsteroid11->setLoop(true);
+
+		Ogre::Animation* animationAsteroid12 = mSceneMgr->createAnimation("AnimAsteroid12",duration);
+		animationAsteroid12->setInterpolationMode(Animation::IM_SPLINE);
+		
+		Ogre::NodeAnimationTrack* Asteroid12track = animationAsteroid12->createNodeTrack(0, _nodeAsteroid12);
+		Ogre::TransformKeyFrame* key12;
+		
+		key12 = Asteroid12track->createNodeKeyFrame(0.0);
+		key12->setTranslate(Vector3(-90, 1000, 8000));
+		key12->setScale(Vector3(6, 4, 4));
+
+		key12 = Asteroid12track->createNodeKeyFrame(1.0);
+		key12->setTranslate(Vector3(-90, 500, 8000));
+		key12->setScale(Vector3(6, 4, 4));
+
+		key12 = Asteroid12track->createNodeKeyFrame(2.0);
+		key12->setTranslate(Vector3(-90, 0, 8000));
+		key12->setScale(Vector3(6, 4, 4));
+
+		key12 = Asteroid12track->createNodeKeyFrame(3.0);
+		key12->setTranslate(Vector3(-90, -500, 8000));
+		key12->setScale(Vector3(6, 4, 4));
+
+		key12 = Asteroid12track->createNodeKeyFrame(4.0);
+		key12->setTranslate(Vector3(-90, -1000, 8000));
+		key12->setScale(Vector3(6, 4, 4));
+
+		animAsteroid12 = mSceneMgr->createAnimationState("AnimAsteroid12");
+		animAsteroid12->setEnabled(true);
+		animAsteroid12->setLoop(true);
 
 		//SPACE
 		mSceneMgr->setSkyDome(true, "matSky", 5, 8);

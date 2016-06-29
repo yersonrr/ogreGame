@@ -121,6 +121,8 @@ material matSphere
 
 material matSphere2
 {
+	receive_shadows on
+
 	technique
 	{
 		pass
@@ -204,6 +206,75 @@ material matArc3
 			texture_unit{
 				texture gold.jpg
 				rotate_anim 0.01
+				scale 2 2
+			}
+		}
+	}
+}
+
+material matAsteroid
+{
+	receive_shadows on
+
+	technique
+	{
+		pass
+		{
+			lighting on
+
+			ambient 1.0 1.0 1.0 1
+			diffuse 1.0 1.0 1.0 1
+			emissive 0 0 0 1
+
+			texture_unit{
+				texture asteroid.jpg
+				rotate_anim 0.001
+				scale 2 2
+			}
+		}
+	}
+}
+
+material matAsteroid2
+{
+	receive_shadows on
+
+	technique
+	{
+		pass
+		{
+			lighting on
+
+			ambient 1.0 1.0 1.0 1
+			diffuse 1.0 1.0 1.0 1
+			emissive 0 0 0 1
+
+			texture_unit{
+				texture asteroid2.jpg
+				rotate_anim 0.001
+				scale 2 2
+			}
+		}
+	}
+}
+
+material matAsteroid3
+{
+	receive_shadows on
+
+	technique
+	{
+		pass
+		{
+			lighting on
+
+			ambient 1.0 1.0 1.0 1
+			diffuse 1.0 1.0 1.0 1
+			emissive 0 0 0 1
+
+			texture_unit{
+				texture asteroid2.jpg
+				rotate_anim 0.001
 				scale 2 2
 			}
 		}
