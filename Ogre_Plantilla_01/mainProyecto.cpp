@@ -3,7 +3,7 @@
 #include "Ogre\Overlay\OgreFontManager.h"
 #include "math.h"
 
-
+Ogre::SceneManager* globalManager;
 AnimationState * wheelSpinningState[4], *wheelTurningRightState[2], *wheelTurningLeftState[2], *transformationState[5];
 
 AnimationState * wheelState[4];
@@ -251,6 +251,9 @@ public:
 
 		if(_key->isKeyDown(OIS::KC_S))
 			tmov += Ogre::Vector3(0,0,-100);
+
+		if(_key->isKeyDown(OIS::KC_P))
+			globalManager->setShadowTechnique(Ogre::SHADOWTYPE_TEXTURE_MODULATIVE);
 
 		if(wheelSpinningState[0]->getEnabled()) {
 			for (int i=0; i<4; i++)
@@ -578,8 +581,10 @@ public:
 	void createScene()
 	{
 
+		globalManager = mSceneMgr;
 		mSceneMgr->setAmbientLight(Ogre::ColourValue(0.8, 0.8, 0.8));
 		mSceneMgr->setShadowTechnique(Ogre::SHADOWTYPE_STENCIL_MODULATIVE);
+
 
 		Ogre::Light* LuzPuntual01 = mSceneMgr->createLight("LuzDirectional01");
 		LuzPuntual01->setType(Ogre::Light::LT_DIRECTIONAL);
