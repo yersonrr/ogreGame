@@ -80,7 +80,7 @@ material matSky
 	{
 		pass
 		{
-			lighting on
+			lighting off
 
 			ambient 1.0 1.0 1.0 1
 			diffuse 1.0 1.0 1.0 1
@@ -149,7 +149,7 @@ material matArc1
 	{
 		pass
 		{
-			lighting on
+			lighting off
 
 			ambient 1.0 1.0 1.0 1
 			diffuse 1.0 1.0 1.0 1
@@ -170,7 +170,7 @@ material matArc2
 	{
 		pass
 		{
-			lighting on
+			lighting off
 
 			ambient 1.0 1.0 1.0 1
 			diffuse 1.0 1.0 1.0 1
@@ -191,7 +191,7 @@ material matArc3
 	{
 		pass
 		{
-			lighting on
+			lighting off
 
 			ambient 1.0 1.0 1.0 1
 			diffuse 1.0 1.0 1.0 1
@@ -270,6 +270,29 @@ material matAsteroid3
 				texture asteroid2.jpg
 				rotate_anim 0.001
 				scale 2 2
+			}
+		}
+	}
+}
+
+material matWall2
+{
+	receive_shadows on
+
+	technique
+	{
+		pass
+		{
+			lighting on
+
+			ambient 1.0 1.0 1.0 1
+			diffuse 1.0 1.0 1.0 1
+			emissive 0 0 0 1
+
+			texture_unit{
+				texture techno3.jpg
+				rotate_anim 0.001
+				scale 0.1 0.1
 			}
 		}
 	}

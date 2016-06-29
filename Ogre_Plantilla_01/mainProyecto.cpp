@@ -3,9 +3,9 @@
 #include "Ogre\Overlay\OgreFontManager.h"
 #include "math.h"
 
-Ogre::SceneManager* globalManager;
-AnimationState * wheelSpinningState[4], *wheelTurningRightState[2], *wheelTurningLeftState[2], *transformationState[5];
 
+Ogre::SceneManager* globalManager;
+AnimationState * wheelSpinningState[4], *wheelTurningRightState[2], *wheelTurningLeftState[2], *transformationState[5], *untransformationState[5];
 AnimationState * wheelState[4];
 AnimationState * asteroidState[9];
 char* wheelName[] = {"wheel1_anim", "wheel2_anim", "wheel3_anim", "wheel4_anim"};
@@ -15,15 +15,18 @@ bool isTakenCoin[20];
 bool is_accelerating = false;
 float time_accelerating = 0.0f;
 
-TextAreaOverlayElement* scoreboardTextArea;
-OverlayContainer* panel;
+TextAreaOverlayElement* TextArea[2];
+OverlayContainer* panel[2];
 
 AnimationState *evolutionState;
 char* wheelSpinningName[] = {"wheel1_Spinning", "wheel2_Spinning", "wheel3_Spinning", "wheel4_Spinning"},
 	* wheelTurningRightName[]  = {"wheel1_TurningRight", "wheel2_TurningRight"},
 	* wheelTurningLeftName[]  = {"wheel1_TurningLeft", "wheel2_TurningLeft"},
-	* transformationName[] = {"transformation1", "transformation2", "transformation3", "transformation4", "transformation5"};
-Ogre::SceneNode* _nodeRueda[4], *_nodeFrontAxis, *_nodeAlas;
+	* transformationName[] = {"transformation1", "transformation2", "transformation3", "transformation4", "transformation5"},
+	* untransformationName[] = {"untransformation1", "untransformation2", "untransformation3", "untransformation4", "untransformation5"};;
+Ogre::SceneNode *_nodeRueda[4], *_nodeFrontAxis, *_nodeAlas;
+Ogre::Vector3 wheels_positions[4];
+Ogre::Quaternion wheels_orientations[4];
 std::vector<Ogre::SceneNode *> obstacles;
 std::vector<Ogre::SceneNode *> coins;
 
@@ -43,7 +46,7 @@ class FrameListenerClase : public Ogre::FrameListener{
 
 private:
 	float time_rotating;
-	bool transformed;
+	bool transformed, won;
 	int degree, taken_coins;
 	Ogre::SceneNode* _node;
 	Ogre::AnimationState* _anim;
@@ -55,6 +58,7 @@ public:
 	FrameListenerClase(Ogre::SceneNode* node, Ogre::Entity* entOgre01, Ogre::Camera* cam, RenderWindow* win){
 		time_rotating = 0.0;
 		degree = 0;
+		won = false;
 		transformed = false;
 		taken_coins = 0;
 
@@ -170,7 +174,32 @@ public:
 			transformationState[i]->setEnabled(true);
 			transformationState[i]->setLoop(false);
 			transformationState[i]->setTimePosition(0.0);
+			untransformationState[i]->setTimePosition(0.0);
+			untransformationState[i]->setEnabled(false);
 		}
+	}
+
+	void untransform() {
+		transformed = false;
+		for (int i=4; i<5; i++) {
+			untransformationState[i]->setEnabled(true);
+			untransformationState[i]->setLoop(false);
+			untransformationState[i]->setTimePosition(0.0);
+			transformationState[i]->setTimePosition(0.0);
+			transformationState[i]->setEnabled(false);
+		}
+	}
+
+	void init(Ogre::SceneNode *node){
+		memset(isTakenCoin, false, 20);
+		for(int i=0; i<20; i++) _nodeCoins[i]->setVisible(true, true);
+		taken_coins = 0;
+		node->_setDerivedPosition(Ogre::Vector3(0,0,0));
+		TextArea[0]->setCaption("Coins: 0");
+		panel[0]->show();
+		TextArea[1]->setCaption("");
+		panel[1]->show();
+		untransform();
 	}
 
 	bool frameStarted(const Ogre::FrameEvent &evt){
@@ -183,6 +212,21 @@ public:
 
 		if (_key->isKeyDown(OIS::KC_ESCAPE))
 			return false;
+		
+		if (won && _key->isKeyDown(OIS::KC_1)) {
+			won = false;
+			init(_node);
+		}
+
+		if (transformed && _key->isKeyDown(OIS::KC_R)) {
+			if (_node->_getDerivedPosition().y < 30)
+				_node->translate(Ogre::Vector3(0.0, 1.0, 0.0));
+		}
+
+		if (transformed && _key->isKeyDown(OIS::KC_F)) {
+			if (_node->_getDerivedPosition().y > -30)
+				_node->translate(Ogre::Vector3(0.0, -1.0, 0.0));
+		}
 
 		if(_key->isKeyDown(OIS::KC_W) || _key->isKeyDown(OIS::KC_S)) {
 			if (!wheelSpinningState[0]->getEnabled()) {
@@ -243,8 +287,10 @@ public:
 			degree = 0;
 		}
 
-		if(_key->isKeyDown(OIS::KC_Q))
+		if(_key->isKeyDown(OIS::KC_Q)) {
 			transform();
+			won = true;
+		}
 
 		if(_key->isKeyDown(OIS::KC_W))
 			tmov += Ogre::Vector3(0,0,100);
@@ -254,6 +300,9 @@ public:
 
 		if(_key->isKeyDown(OIS::KC_P))
 			globalManager->setShadowTechnique(Ogre::SHADOWTYPE_TEXTURE_MODULATIVE);
+		
+		if(_key->isKeyDown(OIS::KC_O))
+			globalManager->setShadowTechnique(Ogre::SHADOWTYPE_STENCIL_MODULATIVE);
 
 		if(wheelSpinningState[0]->getEnabled()) {
 			for (int i=0; i<4; i++)
@@ -267,7 +316,10 @@ public:
 			for (int i=0; i<5; i++)
 				transformationState[i]->addTime(evt.timeSinceLastFrame);
 		}
-
+		if(untransformationState[4]->getEnabled()) {
+			for (int i=4; i<5; i++)
+				untransformationState[i]->addTime(evt.timeSinceLastFrame);
+		}
 		// car control
 		Ogre::Vector3 initial_position = _node->_getDerivedPosition();
 		_node->yaw(Ogre::Degree(trot));
@@ -316,13 +368,21 @@ public:
 				char str[15];
 				taken_coins++;
 				sprintf(str, "Coins: %d", taken_coins);
-				scoreboardTextArea->setCaption(str);
-				panel->show();
+				TextArea[0]->setCaption(str);
+				panel[0]->show();
 			}
 		}
 		else if (!transformed && collides_transformation_line(_node))
 			transform();
-
+		
+		Vector3 v = _node->_getDerivedPosition();
+		if(v.z > 10500){
+			//WIN
+			won = true;
+			_node->_setDerivedPosition(Ogre::Vector3(0,0,0));
+			TextArea[1]->setCaption("YOU WIN :D");
+			panel[1]->show();
+		}
 		return true;
 	}
 };
@@ -351,32 +411,35 @@ public:
 		mRoot->addFrameListener(FrameListener01);
 	}
 
-	void drawText(){
+	void drawText(int i){
 		Overlay* overlay;
 		OverlayManager& overlayManager = OverlayManager::getSingleton();
 
 		// Create a panel
-		panel = static_cast<OverlayContainer*>(
-		overlayManager.createOverlayElement("Panel", "PanelName"));
-		panel->setMetricsMode(Ogre::GMM_PIXELS);
-		panel->setPosition(10, 10);
-		panel->setDimensions(100, 100);
+		char str[20];
+		sprintf(str, "Panel%d", i);
+		panel[i] = static_cast<OverlayContainer*>(
+		overlayManager.createOverlayElement("Panel", str));
+		panel[i]->setMetricsMode(Ogre::GMM_PIXELS);
+		panel[i]->setPosition(10, 10);
+		panel[i]->setDimensions(100 + i*300, 100 + i*300);
 		// Create a text area
-		scoreboardTextArea = static_cast<TextAreaOverlayElement*>(
-		overlayManager.createOverlayElement("TextArea", "TextAreaName"));
-		scoreboardTextArea->setMetricsMode(Ogre::GMM_PIXELS);
-		scoreboardTextArea->setPosition(0, 0);
-		scoreboardTextArea->setDimensions(100, 100);
-		scoreboardTextArea->setCaption("Coins: 0");
-		scoreboardTextArea->setCharHeight(35);
-		scoreboardTextArea->setFontName("YersonPieroFont");
-		scoreboardTextArea->setColourBottom(ColourValue(1, 1, 1));
-		scoreboardTextArea->setColourTop(ColourValue(0.5, 0.7, 0.5));
+		sprintf(str, "TextArea%d", i);
+		TextArea[i] = static_cast<TextAreaOverlayElement*>(
+		overlayManager.createOverlayElement("TextArea", str));
+		TextArea[i]->setMetricsMode(Ogre::GMM_PIXELS);
+		TextArea[i]->setPosition(0 + i*300, 0 + i*300);
+		TextArea[i]->setDimensions(100 + i*300, 100 + i*300);
+		TextArea[i]->setCharHeight(35);
+		TextArea[i]->setFontName("YersonPieroFont");
+		TextArea[i]->setColourBottom(ColourValue(1, 1, 1));
+		TextArea[i]->setColourTop(ColourValue(0.5, 0.7, 0.5));
 		// Create an overlay, and add the panel
-		overlay = overlayManager.create("OverlayName");
-		overlay->add2D(panel);
+		sprintf(str, "Overlay%d", i);
+		overlay = overlayManager.create(str);
+		overlay->add2D(panel[i]);
 		// Add the text area to the panel
-		panel->addChild(scoreboardTextArea);
+		panel[i]->addChild(TextArea[i]);
 		// Show the overlay
 		overlay->show();
 	}
@@ -433,6 +496,52 @@ public:
 			key->setTranslate(_nodeRueda[wheel_index]->getPosition() - Ogre::Vector3(2.0, 2.0, 0.0));
 
 		transformationState[wheel_index] = mSceneMgr->createAnimationState(transformationName[wheel_index]);
+	}
+
+	void createUnTransformationCubeAnimation() {
+		// create animation to grow wings from within the car when transforming into a spaceship
+		Real duration = 1.0;
+		Animation* animation = mSceneMgr->createAnimation(untransformationName[4], duration);
+		animation->setInterpolationMode(Animation::IM_SPLINE);
+		NodeAnimationTrack* track = animation->createNodeTrack(0, _nodeAlas);
+
+		// add keyframes
+		TransformKeyFrame* key;
+		key = track->createNodeKeyFrame(0.0f);
+		key->setTranslate(_nodeAlas->getPosition() + Ogre::Vector3(0,4,0));
+		key->setScale(Ogre::Vector3(3.0, 0.2, 0.3));
+
+		key = track->createNodeKeyFrame(duration);
+		key->setTranslate(_nodeAlas->getPosition());
+		key->setScale(Ogre::Vector3(0.1, 0.1, 0.1));
+
+		untransformationState[4] = mSceneMgr->createAnimationState(untransformationName[4]);
+	}
+
+	void createUnTransformationAnimation(int wheel_index) {
+		// create animation to transform the car into a spaceship
+		Real duration = 0.5;
+		Animation* animation = mSceneMgr->createAnimation(untransformationName[wheel_index], duration);
+		animation->setInterpolationMode(Animation::IM_SPLINE);
+		NodeAnimationTrack* track = animation->createNodeTrack(0, _nodeRueda[wheel_index]);
+
+		Ogre::Vector3 wheel_rotation_vector(0.0, 0.0, 1.0);
+
+		// add keyframes
+		TransformKeyFrame* key;
+
+		key = track->createNodeKeyFrame(0.0f);
+		key->setTranslate(_nodeRueda[wheel_index]->getPosition());
+		key->setRotation(Quaternion(Degree(0), wheel_rotation_vector));
+
+		key = track->createNodeKeyFrame(duration);
+		key->setTranslate(_nodeRueda[wheel_index]->getPosition());
+		key->setRotation(Quaternion(Degree((wheel_index==0 || wheel_index==2) ? -90 : 90), wheel_rotation_vector));
+
+		if (wheel_index == 1 || wheel_index == 3)
+			key->setTranslate(_nodeRueda[wheel_index]->getPosition());
+
+		untransformationState[wheel_index] = mSceneMgr->createAnimationState(untransformationName[wheel_index]);
 	}
 
 	void createCoin(String name, String entity, int index, int x, int z){
@@ -1216,6 +1325,11 @@ public:
 		_nodeObstaculo47->translate(-160,5,6300);
 		_nodeObstaculo47->setScale(0.3,0.3,0.3);
 
+		/*Ogre::SceneNode *_nodeParticle01 = mSceneMgr->createSceneNode("particle01");
+		Ogre::ParticleSystem *particleSystem01 = mSceneMgr->createParticleSystem("Smoke", "Smoke");
+		_nodeParticle01->attachObject(particleSystem01);
+		particleSystem01->setEmitting(false);
+		*/
 		// Animation Sphere
 		float durationAnim = 4;
 		Ogre::Animation* animationSphere01 = mSceneMgr->createAnimation("AnimSphere01",durationAnim);
@@ -1256,6 +1370,11 @@ public:
 		_nodeObstaculo48->translate(160,5,6400);
 		_nodeObstaculo48->setScale(0.3,0.3,0.3);
 
+		/*Ogre::SceneNode *_nodeParticle02= mSceneMgr->createSceneNode("particle01");
+		Ogre::ParticleSystem *particleSystem01 = mSceneMgr->createParticleSystem("particleSystem1", "PurpleFountain");
+		_nodeParticle01->attachObject(particleSystem01);
+		particleSystem01->setEmitting(false);
+		*/
 		// Animation Sphere 2
 		Ogre::Animation* animationSphere02 = mSceneMgr->createAnimation("AnimSphere02",durationAnim);
 		animationSphere02->setInterpolationMode(Animation::IM_SPLINE);
@@ -1823,13 +1942,18 @@ public:
 		for (int i=0; i<4; i++) {
 			createWheelSpinningAnimation(i);
 			createTransformationAnimation(i);
+			createUnTransformationAnimation(i);
+			wheels_positions[i] = _nodeRueda[i]->_getDerivedPosition();
+			wheels_orientations[i] = _nodeRueda[i]->_getDerivedOrientation();
 		}
 		for (int i=0; i<2; i++) {
 			createWheelTurningRightAnimation(i);
 			createWheelTurningLeftAnimation(i);
 		}
 		createTransformationCubeAnimation();
-		drawText();
+		createUnTransformationCubeAnimation();
+		drawText(0);
+		drawText(1);
 	}
 };
 

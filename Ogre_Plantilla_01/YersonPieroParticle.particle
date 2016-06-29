@@ -1,0 +1,20 @@
+particle_system Firework
+{
+	material Examples/Smoke
+	particle_width 10
+	particle_height 10
+	quota 5000
+	billboard_type point
+
+	emitter Point
+	{
+		emission_rate 100
+		direction 0 1 0
+		velocity 50
+		angle 360
+		duration 0.1
+		repeat_delay 1
+		color_range_start 0 0 0
+		color_range_end 1 1 1
+	}
+}
