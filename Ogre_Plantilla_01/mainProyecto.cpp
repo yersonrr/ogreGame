@@ -1,6 +1,7 @@
 #include "Ogre\ExampleApplication.h"
+#include "Ogre\Overlay\OgreTextAreaOverlayElement.h"
+#include "Ogre\Overlay\OgreFontManager.h"
 #include "math.h"
-
 
 
 AnimationState * wheelState[4];
@@ -30,6 +31,7 @@ Ogre::AnimationState* animAsteroid9;
 Ogre::AnimationState* animAsteroid10;
 Ogre::AnimationState* animAsteroid11;
 Ogre::AnimationState* animAsteroid12;
+
 
 class FrameListenerClase : public Ogre::FrameListener{
 
@@ -154,7 +156,7 @@ public:
 
 		Ogre::Vector3 tmov(0,0,0);
 		float movSpeed=3.0;
-		float rotSpeed=5.0;
+		float rotSpeed=1.0;
 		float trot = 0.0;
 
 		if (_key->isKeyDown(OIS::KC_ESCAPE))
@@ -316,6 +318,39 @@ public:
 		mRoot->addFrameListener(FrameListener01);
 	}
 
+	void drawText(){
+		OverlayManager& overlayManager = OverlayManager::getSingleton();
+		// Create a panel
+		OverlayContainer* panel = static_cast<OverlayContainer*>(
+			overlayManager.createOverlayElement("Panel1", "PanelName11"));
+		panel->setMetricsMode(Ogre::GMM_PIXELS);
+		panel->setPosition(10, 10);
+		panel->setDimensions(100, 100);
+		//panel->setMaterialName("MaterialName"); // Optional background material
+ 
+		// Create a text area
+		TextAreaOverlayElement* textArea = static_cast<TextAreaOverlayElement*>(
+			overlayManager.createOverlayElement("TextArea1", "TextAreaName11"));
+		textArea->setMetricsMode(Ogre::GMM_PIXELS);
+		textArea->setPosition(0, 0);
+		textArea->setDimensions(100, 100);
+		textArea->setCaption("Hello, World!");
+		textArea->setCharHeight(16);
+		textArea->setFontName("YersonPieroFont");
+		textArea->setColourBottom(ColourValue(0.3, 0.5, 0.3));
+		textArea->setColourTop(ColourValue(0.5, 0.7, 0.5));
+ 
+		// Create an overlay, and add the panel
+		Overlay* overlay = overlayManager.create("OverlayName11");
+		overlay->add2D(panel);
+ 
+		// Add the text area to the panel
+		panel->addChild(textArea);
+ 
+		// Show the overlay
+		overlay->show();
+	}
+
 	void createCamera() {
 		mCamera = mSceneMgr->createCamera("MyCamera1");
 		mCamera->setPosition(0,20,-70);
@@ -463,6 +498,9 @@ public:
 
 	void createScene()
 	{
+		Ogre::OverlaySystem* pOverlaySystem = OGRE_NEW Ogre::OverlaySystem();
+		mSceneMgr->addRenderQueueListener(pOverlaySystem);
+
 		mSceneMgr->setAmbientLight(Ogre::ColourValue(0.0, 0.0, 0.0));
 		//mSceneMgr->setShadowTechnique(Ogre::SHADOWTYPE_STENCIL_MODULATIVE);
 		
@@ -533,6 +571,7 @@ public:
 				
 		Ogre::Entity* _entBPista = mSceneMgr->createEntity("BordePista01", "bordePista.mesh");
 		_nodeBPista->attachObject(_entBPista);
+		_entBPista->setMaterialName("matWall2");
 		
 		//PisoObstaculo
 		Ogre::SceneNode* _nodePObstaculo = mSceneMgr->createSceneNode("PistaObstaculo");
@@ -1677,6 +1716,38 @@ public:
 			createWheelTurningRightAnimation(i);
 			createWheelTurningLeftAnimation(i);
 		}
+		//drawText();
+		OverlayManager& overlayManager = OverlayManager::getSingleton();
+		// Create a panel
+		OverlayContainer* panel = static_cast<OverlayContainer*>(
+			overlayManager.createOverlayElement("Panel1", "PanelName11"));
+		panel->setMetricsMode(Ogre::GMM_PIXELS);
+		panel->setPosition(10, 10);
+		panel->setDimensions(100, 100);
+		//panel->setMaterialName("MaterialName"); // Optional background material
+ 
+		// Create a text area
+		TextAreaOverlayElement* textArea = static_cast<TextAreaOverlayElement*>(
+			overlayManager.createOverlayElement("TextArea1", "TextAreaName11"));
+		textArea->setMetricsMode(Ogre::GMM_PIXELS);
+		textArea->setPosition(0, 0);
+		textArea->setDimensions(100, 100);
+		textArea->setCaption("Hello, World!");
+		textArea->setCharHeight(16);
+		textArea->setFontName("YersonPieroFont");
+		textArea->setColourBottom(ColourValue(0.3, 0.5, 0.3));
+		textArea->setColourTop(ColourValue(0.5, 0.7, 0.5));
+ 
+		// Create an overlay, and add the panel
+		Overlay* overlay = overlayManager.create("OverlayName11");
+		overlay->add2D(panel);
+ 
+		// Add the text area to the panel
+		panel->addChild(textArea);
+ 
+		// Show the overlay
+		overlay->show();
+
 	}
 };
 
