@@ -13,6 +13,9 @@ bool isTakenCoin[20];
 bool is_accelerating = false;
 float time_accelerating = 0.0f;
 
+TextAreaOverlayElement* scoreboardTextArea;
+OverlayContainer* panel;
+
 AnimationState * wheelSpinningState[4], *wheelTurningRightState[2], *wheelTurningLeftState[2], *evolutionState;
 char* wheelSpinningName[] = {"wheel1_Spinning", "wheel2_Spinning", "wheel3_Spinning", "wheel4_Spinning"},
 	* wheelTurningRightName[]  = {"wheel1_TurningRight", "wheel2_TurningRight"},
@@ -37,7 +40,7 @@ class FrameListenerClase : public Ogre::FrameListener{
 
 private:
 	float time_rotating;
-	int degree;
+	int degree, taken_coins;
 	Ogre::SceneNode* _node;
 	Ogre::AnimationState* _anim;
 	OIS::InputManager* _man;
@@ -48,6 +51,7 @@ public:
 	FrameListenerClase(Ogre::SceneNode* node, Ogre::Entity* entOgre01, Ogre::Camera* cam, RenderWindow* win){
 		time_rotating = 0.0;
 		degree = 0;
+		taken_coins = 0;
 
 		//Configuracion para captura de teclado y mouse 
 		size_t windowHnd = 0;
@@ -286,7 +290,11 @@ public:
 			if(!isTakenCoin[aux]){
 				_nodeCoins[aux]->setVisible(false, true);
 				isTakenCoin[aux] = true;
-				// Add to score
+				char str[15];
+				taken_coins++;
+				sprintf(str, "Coins: %d", taken_coins);
+				scoreboardTextArea->setCaption(str);
+				panel->show();
 			}
 		}
 
@@ -319,34 +327,31 @@ public:
 	}
 
 	void drawText(){
+		Overlay* overlay;
 		OverlayManager& overlayManager = OverlayManager::getSingleton();
+
 		// Create a panel
-		OverlayContainer* panel = static_cast<OverlayContainer*>(
-			overlayManager.createOverlayElement("Panel1", "PanelName11"));
+		panel = static_cast<OverlayContainer*>(
+		overlayManager.createOverlayElement("Panel", "PanelName"));
 		panel->setMetricsMode(Ogre::GMM_PIXELS);
 		panel->setPosition(10, 10);
 		panel->setDimensions(100, 100);
-		//panel->setMaterialName("MaterialName"); // Optional background material
- 
 		// Create a text area
-		TextAreaOverlayElement* textArea = static_cast<TextAreaOverlayElement*>(
-			overlayManager.createOverlayElement("TextArea1", "TextAreaName11"));
-		textArea->setMetricsMode(Ogre::GMM_PIXELS);
-		textArea->setPosition(0, 0);
-		textArea->setDimensions(100, 100);
-		textArea->setCaption("Hello, World!");
-		textArea->setCharHeight(16);
-		textArea->setFontName("YersonPieroFont");
-		textArea->setColourBottom(ColourValue(0.3, 0.5, 0.3));
-		textArea->setColourTop(ColourValue(0.5, 0.7, 0.5));
- 
+		scoreboardTextArea = static_cast<TextAreaOverlayElement*>(
+		overlayManager.createOverlayElement("TextArea", "TextAreaName"));
+		scoreboardTextArea->setMetricsMode(Ogre::GMM_PIXELS);
+		scoreboardTextArea->setPosition(0, 0);
+		scoreboardTextArea->setDimensions(100, 100);
+		scoreboardTextArea->setCaption("Coins: 0");
+		scoreboardTextArea->setCharHeight(35);
+		scoreboardTextArea->setFontName("YersonPieroFont");
+		scoreboardTextArea->setColourBottom(ColourValue(1, 1, 1));
+		scoreboardTextArea->setColourTop(ColourValue(0.5, 0.7, 0.5));
 		// Create an overlay, and add the panel
-		Overlay* overlay = overlayManager.create("OverlayName11");
+		overlay = overlayManager.create("OverlayName");
 		overlay->add2D(panel);
- 
 		// Add the text area to the panel
-		panel->addChild(textArea);
- 
+		panel->addChild(scoreboardTextArea);
 		// Show the overlay
 		overlay->show();
 	}
@@ -498,9 +503,6 @@ public:
 
 	void createScene()
 	{
-		Ogre::OverlaySystem* pOverlaySystem = OGRE_NEW Ogre::OverlaySystem();
-		mSceneMgr->addRenderQueueListener(pOverlaySystem);
-
 		mSceneMgr->setAmbientLight(Ogre::ColourValue(0.0, 0.0, 0.0));
 		//mSceneMgr->setShadowTechnique(Ogre::SHADOWTYPE_STENCIL_MODULATIVE);
 		
@@ -1716,38 +1718,7 @@ public:
 			createWheelTurningRightAnimation(i);
 			createWheelTurningLeftAnimation(i);
 		}
-		//drawText();
-		OverlayManager& overlayManager = OverlayManager::getSingleton();
-		// Create a panel
-		OverlayContainer* panel = static_cast<OverlayContainer*>(
-			overlayManager.createOverlayElement("Panel1", "PanelName11"));
-		panel->setMetricsMode(Ogre::GMM_PIXELS);
-		panel->setPosition(10, 10);
-		panel->setDimensions(100, 100);
-		//panel->setMaterialName("MaterialName"); // Optional background material
- 
-		// Create a text area
-		TextAreaOverlayElement* textArea = static_cast<TextAreaOverlayElement*>(
-			overlayManager.createOverlayElement("TextArea1", "TextAreaName11"));
-		textArea->setMetricsMode(Ogre::GMM_PIXELS);
-		textArea->setPosition(0, 0);
-		textArea->setDimensions(100, 100);
-		textArea->setCaption("Hello, World!");
-		textArea->setCharHeight(16);
-		textArea->setFontName("YersonPieroFont");
-		textArea->setColourBottom(ColourValue(0.3, 0.5, 0.3));
-		textArea->setColourTop(ColourValue(0.5, 0.7, 0.5));
- 
-		// Create an overlay, and add the panel
-		Overlay* overlay = overlayManager.create("OverlayName11");
-		overlay->add2D(panel);
- 
-		// Add the text area to the panel
-		panel->addChild(textArea);
- 
-		// Show the overlay
-		overlay->show();
-
+		drawText();
 	}
 };
 
