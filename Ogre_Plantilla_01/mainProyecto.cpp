@@ -2,17 +2,19 @@
 #include "math.h"
 
 
-AnimationState * wheelSpinningState[4], *wheelTurningRightState[2], *wheelTurningLeftState[2];
+AnimationState * wheelSpinningState[4], *wheelTurningRightState[2], *wheelTurningLeftState[2], *evolutionState;
 char* wheelSpinningName[] = {"wheel1_Spinning", "wheel2_Spinning", "wheel3_Spinning", "wheel4_Spinning"},
 	* wheelTurningRightName[]  = {"wheel1_TurningRight", "wheel2_TurningRight"},
 	* wheelTurningLeftName[]  = {"wheel1_TurningLeft", "wheel2_TurningLeft"};
-Ogre::SceneNode* _nodeRueda[4];
+Ogre::SceneNode* _nodeRueda[4], *_nodeFrontAxis;
 std::vector<Ogre::SceneNode *> obstacles;
 
 
 class FrameListenerClase : public Ogre::FrameListener{
 
 private:
+	float time_rotating;
+	int degree;
 	Ogre::SceneNode* _node;
 	Ogre::AnimationState* _anim;
 	OIS::InputManager* _man;
@@ -21,6 +23,9 @@ private:
 
 public:
 	FrameListenerClase(Ogre::SceneNode* node, Ogre::Entity* entOgre01, Ogre::Camera* cam, RenderWindow* win){
+		time_rotating = 0.0;
+		degree = 0;
+
 		//Configuracion para captura de teclado y mouse 
 		size_t windowHnd = 0;
 		std::stringstream windowHndStr;
@@ -90,59 +95,62 @@ public:
 	bool frameStarted(const Ogre::FrameEvent &evt){
 		_key->capture();
 
+		Ogre::Vector3 tmov(0,0,0);
 		float movSpeed=3.0;
 		float rotSpeed=5.0;
-		Ogre::Vector3 tmov(0,0,0);
 		float trot = 0.0;
 
 		if (_key->isKeyDown(OIS::KC_ESCAPE))
 			return false;
-		
+
 		if(_key->isKeyDown(OIS::KC_W) || _key->isKeyDown(OIS::KC_S)) {
-			if (_key->isKeyDown(OIS::KC_D)) {
-				trot -= rotSpeed;
-
-				for (int i=0; i<4; i++) {
-					wheelSpinningState[i]->setTimePosition(0.0);
-					wheelSpinningState[i]->setEnabled(false);
-				}
-
-				if (wheelTurningRightState[0]->getTimePosition() > 0.0) {
-					for (int i=0; i<2; i++)
-						wheelTurningRightState[i]->setTimePosition(0.5);
-				}
-				else {
-					for (int i=0; i<2; i++) {
-						wheelTurningRightState[i]->setEnabled(true);
-						wheelTurningRightState[i]->setLoop(false);
-					}
-				}
-			}
-			else if (_key->isKeyDown(OIS::KC_A)) {
-				trot += rotSpeed;
-
-				for (int i=0; i<4; i++) {
-					wheelSpinningState[i]->setTimePosition(0.0);
-					wheelSpinningState[i]->setEnabled(false);
-				}
-
-				if (wheelTurningLeftState[0]->getTimePosition() > 0.0) {
-					for (int i=0; i<2; i++)
-						wheelTurningLeftState[i]->setTimePosition(0.5);
-				}
-				else {
-					for (int i=0; i<2; i++) {
-						wheelTurningLeftState[i]->setEnabled(true);
-						wheelTurningLeftState[i]->setLoop(false);
-					}
-				}
-			}
-			else if (!wheelSpinningState[0]->getEnabled()) {
-				for (int i=0; i<4; i++) {
+			if (!wheelSpinningState[0]->getEnabled()) {
+				for (int i=0; i<2; i++) {
 					wheelSpinningState[i]->setEnabled(true);
 					wheelSpinningState[i]->setLoop(true);
 					wheelSpinningState[i]->setTimePosition(0.0);
 				}
+			}
+			if (!wheelSpinningState[2]->getEnabled()) {
+				for (int i=2; i<4; i++) {
+					wheelSpinningState[i]->setEnabled(true);
+					wheelSpinningState[i]->setLoop(true);
+					wheelSpinningState[i]->setTimePosition(0.0);
+				}
+			}
+			if (_key->isKeyDown(OIS::KC_D)) {
+				trot -= rotSpeed;
+				if (degree > 0) { 
+					_nodeFrontAxis->yaw(Degree(-degree));
+					degree = 0;
+				}
+				if (degree > -10) {
+					degree -= 2;
+					_nodeFrontAxis->yaw(Degree(-2));
+				}
+				for (int i=0; i<2; i++) {
+					wheelSpinningState[i]->setTimePosition(0.0);
+					wheelSpinningState[i]->setEnabled(false);
+				}
+			}
+			else if (_key->isKeyDown(OIS::KC_A)) {
+				trot += rotSpeed;
+				if (degree < 0) { 
+					_nodeFrontAxis->yaw(Degree(-degree));
+					degree = 0;
+				}
+				if (degree < 10) {
+					degree += 2;
+					_nodeFrontAxis->yaw(Degree(2));
+				}
+				for (int i=0; i<2; i++) {
+					wheelSpinningState[i]->setTimePosition(0.0);
+					wheelSpinningState[i]->setEnabled(false);
+				}
+			}
+			else {
+				_nodeFrontAxis->yaw(Degree(-degree));
+				degree = 0;
 			}
 		}
 		else {
@@ -150,6 +158,13 @@ public:
 				wheelSpinningState[i]->setLoop(false);
 				wheelSpinningState[i]->setEnabled(false);
 			}
+			_nodeFrontAxis->yaw(Degree(-degree));
+			degree = 0;
+		}
+
+		if(_key->isKeyDown(OIS::KC_Q)) {
+			evolutionState->setEnabled(true);
+			evolutionState->setTimePosition(0.0);
 		}
 
 		if(_key->isKeyDown(OIS::KC_W))
@@ -162,15 +177,9 @@ public:
 			for (int i=0; i<4; i++)
 				wheelSpinningState[i]->addTime(evt.timeSinceLastFrame);
 		}
-		
-		if(wheelTurningRightState[1]->getEnabled()) {
-			for (int i=0; i<2; i++)
-				wheelTurningRightState[i]->addTime(evt.timeSinceLastFrame);
-		}
-
-		if(wheelTurningLeftState[1]->getEnabled()) {
-			for (int i=0; i<2; i++)
-				wheelTurningLeftState[i]->addTime(evt.timeSinceLastFrame);
+		if(wheelSpinningState[2]->getEnabled()) {
+			for (int i=2; i<4; i++)
+				wheelSpinningState[i]->addTime(evt.timeSinceLastFrame);
 		}
 
 		// car control
@@ -194,7 +203,7 @@ class Example1 : public ExampleApplication
 public:
 
 	Ogre::FrameListener* FrameListener01;
-	Ogre::SceneNode* _nodeChasis01;
+	Ogre::SceneNode* _nodeChasis01, *_nodeCarro;
 	Ogre::Entity* _entChasis01;
 
 	Example1(){
@@ -207,7 +216,7 @@ public:
 	}
 
 	void createFrameListener(){
-		FrameListener01 = new FrameListenerClase(_nodeChasis01,_entChasis01,mCamera,mWindow);
+		FrameListener01 = new FrameListenerClase(_nodeCarro,_entChasis01,mCamera,mWindow);
 		mRoot->addFrameListener(FrameListener01);
 	}
 
@@ -256,15 +265,15 @@ public:
 		Ogre::Vector3 pos(0,0,0);//_nodeRueda[wheel_index]->getPosition();
 
 		key = track->createNodeKeyFrame(0.0f);
-		key->setTranslate(_nodeRueda[wheel_index]->getPosition());
+		//key->setTranslate(_nodeRueda[wheel_index]->getPosition());
 		key->setRotation(Quaternion(Degree(0), wheel_rotation_vector));
 
 		key = track->createNodeKeyFrame(step);
-		key->setTranslate(_nodeRueda[wheel_index]->getPosition());
+		//key->setTranslate(_nodeRueda[wheel_index]->getPosition());
 		key->setRotation(Quaternion(Degree(-30), wheel_rotation_vector));
 
 		key = track->createNodeKeyFrame(duration);
-		key->setTranslate(_nodeRueda[wheel_index]->getPosition());
+		//key->setTranslate(_nodeRueda[wheel_index]->getPosition());
 		key->setRotation(Quaternion(Degree(0), wheel_rotation_vector));
 
 		wheelTurningRightState[wheel_index] = mSceneMgr->createAnimationState(wheelTurningRightName[wheel_index]);
@@ -282,18 +291,17 @@ public:
 
 		// add keyframes
 		TransformKeyFrame* key;
-		Ogre::Vector3 pos(0,0,0);//_nodeRueda[wheel_index]->getPosition();
 
 		key = track->createNodeKeyFrame(0.0f);
-		key->setTranslate(_nodeRueda[wheel_index]->getPosition());
+		//key->setTranslate(_nodeRueda[wheel_index]->getPosition());
 		key->setRotation(Quaternion(Degree(0), wheel_rotation_vector));
 
 		key = track->createNodeKeyFrame(step);
-		key->setTranslate(_nodeRueda[wheel_index]->getPosition());
+		//key->setTranslate(_nodeRueda[wheel_index]->getPosition());
 		key->setRotation(Quaternion(Degree(30), wheel_rotation_vector));
 
 		key = track->createNodeKeyFrame(duration);
-		key->setTranslate(_nodeRueda[wheel_index]->getPosition());
+		//key->setTranslate(_nodeRueda[wheel_index]->getPosition());
 		key->setRotation(Quaternion(Degree(0), wheel_rotation_vector));
 
 		wheelTurningLeftState[wheel_index] = mSceneMgr->createAnimationState(wheelTurningLeftName[wheel_index]);
@@ -314,16 +322,20 @@ public:
 		LuzPuntual03->setDiffuseColour(1.0,1.0,1.0);
 		LuzPuntual03->setDirection(Ogre::Vector3( -1, -1, -1 ));
 
+		// Carro
+		_nodeCarro = mSceneMgr->createSceneNode("Carro");
+		mSceneMgr->getRootSceneNode()->addChild(_nodeCarro);
+
 		//Chasis
 		_nodeChasis01 = mSceneMgr->createSceneNode("Chasis01");
 		_nodeChasis01->attachObject(mCamera);
-
-		mSceneMgr->getRootSceneNode()->addChild(_nodeChasis01);
+		_nodeCarro->addChild(_nodeChasis01);
 		
 		_entChasis01 = mSceneMgr->createEntity("entChasis01", "chasisCarro.mesh");
 		_entChasis01->setMaterialName("shCarro01");
 		_nodeChasis01->attachObject(_entChasis01);
-
+		_nodeFrontAxis = mSceneMgr->createSceneNode("FrontAxis");
+		_nodeChasis01->addChild(_nodeFrontAxis);
 		//Ruedas
 		//Rueda 1
 		_nodeRueda[2] = mSceneMgr->createSceneNode("Rueda01");
@@ -336,7 +348,7 @@ public:
 
 		//Rueda 2
 		_nodeRueda[0] = mSceneMgr->createSceneNode("Rueda02");
-		_nodeChasis01->addChild(_nodeRueda[0]);
+		_nodeFrontAxis->addChild(_nodeRueda[0]);
 			
 		Ogre::Entity* _entRueda02 = mSceneMgr->createEntity("entRueda02", "ruedaDetallada.mesh");
 		_nodeRueda[0]->translate(-5.77,3.517,9.462);
@@ -345,7 +357,7 @@ public:
 
 		//Rueda 3
 		_nodeRueda[1] = mSceneMgr->createSceneNode("Rueda03");
-		_nodeChasis01->addChild(_nodeRueda[1]);
+		_nodeFrontAxis->addChild(_nodeRueda[1]);
 			
 		Ogre::Entity* _entRueda03 = mSceneMgr->createEntity("entRueda03", "ruedaDetallada.mesh");
 		_nodeRueda[1]->translate(8.0,3.517,9.462);
